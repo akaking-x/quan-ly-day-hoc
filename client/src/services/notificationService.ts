@@ -3,8 +3,9 @@
 export interface NotificationSettings {
   enabled: boolean;
   soundEnabled: boolean;
-  minutesBefore: number; // 5, 10, 15, 30
-  soundDuration: 'short' | 'medium' | 'long'; // Độ dài chuông
+  reminderHours: number; // Số giờ báo trước
+  reminderMinutes: number; // Số phút báo trước
+  soundDurationSeconds: number; // Độ dài chuông (giây)
 }
 
 const STORAGE_KEY = 'notification-settings';
@@ -14,8 +15,9 @@ const SCHEDULED_KEY = 'scheduled-notifications';
 const defaultSettings: NotificationSettings = {
   enabled: false,
   soundEnabled: true,
-  minutesBefore: 5,
-  soundDuration: 'medium',
+  reminderHours: 0,
+  reminderMinutes: 5,
+  soundDurationSeconds: 3, // 3 giây mặc định
 };
 
 // Get notification settings from localStorage
@@ -68,14 +70,7 @@ export const getNotificationPermission = (): NotificationPermission => {
   return Notification.permission;
 };
 
-// Sound duration configurations
-const soundDurations = {
-  short: { duration: 0.8, repeats: 1 },
-  medium: { duration: 1.5, repeats: 2 },
-  long: { duration: 3.0, repeats: 3 },
-};
-
-// Play a single notification chime
+// Play a single notification chime (0.6s each)
 const playChime = (audioContext: AudioContext, startTime: number, volume: number = 0.3): void => {
   const oscillator1 = audioContext.createOscillator();
   const oscillator2 = audioContext.createOscillator();
@@ -109,18 +104,22 @@ const playChime = (audioContext: AudioContext, startTime: number, volume: number
   oscillator2.stop(startTime + 0.6);
 };
 
-// Play notification sound
-export const playNotificationSound = (): void => {
+// Play notification sound based on duration setting
+export const playNotificationSound = (customDurationSeconds?: number): void => {
   const settings = getNotificationSettings();
   if (!settings.soundEnabled) return;
 
   try {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const config = soundDurations[settings.soundDuration] || soundDurations.medium;
+    const durationSeconds = customDurationSeconds ?? settings.soundDurationSeconds;
 
-    // Play chimes based on duration setting
-    for (let i = 0; i < config.repeats; i++) {
-      const startTime = audioContext.currentTime + (i * 0.7); // 0.7s gap between chimes
+    // Each chime takes ~0.7s (0.6s sound + 0.1s gap)
+    // Calculate number of chimes based on duration
+    const chimeInterval = 0.7; // seconds between chime starts
+    const repeats = Math.max(1, Math.ceil(durationSeconds / chimeInterval));
+
+    for (let i = 0; i < repeats; i++) {
+      const startTime = audioContext.currentTime + (i * chimeInterval);
       playChime(audioContext, startTime, 0.25);
     }
   } catch (e) {
@@ -221,7 +220,8 @@ export const scheduleSessionNotification = (session: ScheduledSession): void => 
   const sessionDate = new Date(session.date);
   sessionDate.setHours(hours, minutes, 0, 0);
 
-  const notifyTime = new Date(sessionDate.getTime() - settings.minutesBefore * 60 * 1000);
+  const totalMinutesBefore = (settings.reminderHours * 60) + settings.reminderMinutes;
+  const notifyTime = new Date(sessionDate.getTime() - totalMinutesBefore * 60 * 1000);
   const now = new Date();
   const delay = notifyTime.getTime() - now.getTime();
 

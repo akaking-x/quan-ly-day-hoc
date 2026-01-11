@@ -63,14 +63,20 @@ function NotificationSettingsCard() {
     saveNotificationSettings(newSettings);
   };
 
-  const handleChangeMinutes = (minutes: number) => {
-    const newSettings = { ...settings, minutesBefore: minutes };
+  const handleChangeReminderHours = (hours: number) => {
+    const newSettings = { ...settings, reminderHours: Math.max(0, Math.min(24, hours)) };
     setSettings(newSettings);
     saveNotificationSettings(newSettings);
   };
 
-  const handleChangeSoundDuration = (duration: 'short' | 'medium' | 'long') => {
-    const newSettings = { ...settings, soundDuration: duration };
+  const handleChangeReminderMinutes = (minutes: number) => {
+    const newSettings = { ...settings, reminderMinutes: Math.max(0, Math.min(59, minutes)) };
+    setSettings(newSettings);
+    saveNotificationSettings(newSettings);
+  };
+
+  const handleChangeSoundDuration = (seconds: number) => {
+    const newSettings = { ...settings, soundDurationSeconds: Math.max(1, Math.min(60, seconds)) };
     setSettings(newSettings);
     saveNotificationSettings(newSettings);
   };
@@ -192,7 +198,7 @@ function NotificationSettingsCard() {
                         </svg>
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">Độ dài chuông</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Chọn thời lượng âm thanh</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Thời lượng âm thanh (1-60 giây)</p>
                         </div>
                       </div>
                       <button
@@ -202,29 +208,36 @@ function NotificationSettingsCard() {
                         Nghe thử
                       </button>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { value: 'short' as const, label: 'Ngắn', desc: '1 tiếng' },
-                        { value: 'medium' as const, label: 'Trung bình', desc: '2 tiếng' },
-                        { value: 'long' as const, label: 'Dài', desc: '3 tiếng' },
-                      ].map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => handleChangeSoundDuration(option.value)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            settings.soundDuration === option.value
-                              ? 'bg-purple-600 text-white'
-                              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={settings.soundDurationSeconds}
+                        onChange={(e) => handleChangeSoundDuration(parseInt(e.target.value) || 1)}
+                        className="w-20 px-3 py-2 text-center text-lg font-semibold bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                      <span className="text-gray-600 dark:text-gray-400">giây</span>
+                      <div className="flex gap-1 ml-auto">
+                        {[3, 5, 10].map((sec) => (
+                          <button
+                            key={sec}
+                            onClick={() => handleChangeSoundDuration(sec)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                              settings.soundDurationSeconds === sec
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                            }`}
+                          >
+                            {sec}s
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Minutes Before */}
+                {/* Reminder Time - Hours & Minutes */}
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-3">
                   <div className="flex items-center gap-3">
                     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,20 +248,52 @@ function NotificationSettingsCard() {
                       <p className="text-sm text-gray-500 dark:text-gray-400">Nhận thông báo trước giờ học</p>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {[5, 10, 15, 30].map((minutes) => (
-                      <button
-                        key={minutes}
-                        onClick={() => handleChangeMinutes(minutes)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          settings.minutesBefore === minutes
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                        }`}
-                      >
-                        {minutes} phút
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="24"
+                        value={settings.reminderHours}
+                        onChange={(e) => handleChangeReminderHours(parseInt(e.target.value) || 0)}
+                        className="w-16 px-2 py-2 text-center text-lg font-semibold bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                      <span className="text-gray-600 dark:text-gray-400">giờ</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={settings.reminderMinutes}
+                        onChange={(e) => handleChangeReminderMinutes(parseInt(e.target.value) || 0)}
+                        className="w-16 px-2 py-2 text-center text-lg font-semibold bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                      <span className="text-gray-600 dark:text-gray-400">phút</span>
+                    </div>
+                    <div className="flex gap-1 ml-auto">
+                      {[
+                        { h: 0, m: 5, label: '5p' },
+                        { h: 0, m: 15, label: '15p' },
+                        { h: 0, m: 30, label: '30p' },
+                        { h: 1, m: 0, label: '1h' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.label}
+                          onClick={() => {
+                            handleChangeReminderHours(preset.h);
+                            handleChangeReminderMinutes(preset.m);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            settings.reminderHours === preset.h && settings.reminderMinutes === preset.m
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
