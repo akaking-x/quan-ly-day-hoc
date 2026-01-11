@@ -130,6 +130,8 @@ export function Groups() {
       defaultFeePerSession: group.defaultFeePerSession.toString(),
       schedule: [...group.schedule],
     });
+    setDuplicateSchedule(false);
+    setWeeksToGenerate(4);
     setIsModalOpen(true);
   };
 
@@ -175,7 +177,70 @@ export function Groups() {
     try {
       if (editingGroup) {
         await groupApi.update(editingGroup._id, data);
-        toast.success('Cập nhật lớp học thành công');
+
+        // Nếu chọn nhân bản lịch khi chỉnh sửa
+        if (duplicateSchedule && formData.schedule.length > 0) {
+          const now = new Date();
+          let sessionsCreated = 0;
+
+          // For each week
+          for (let week = 0; week < weeksToGenerate; week++) {
+            // For each schedule item
+            for (const scheduleItem of formData.schedule) {
+              // Calculate the date for this session
+              const sessionDate = new Date(now);
+
+              // Get current day of week (0 = Sunday, 1 = Monday, ...)
+              const currentDayOfWeek = now.getDay();
+              const targetDayOfWeek = scheduleItem.dayOfWeek;
+
+              // Calculate days until target day in current week
+              let daysUntil = targetDayOfWeek - currentDayOfWeek;
+
+              // Add weeks offset
+              daysUntil += week * 7;
+
+              // If it's the first week and the day has passed, skip
+              if (week === 0 && daysUntil < 0) {
+                continue;
+              }
+
+              sessionDate.setDate(now.getDate() + daysUntil);
+              sessionDate.setHours(0, 0, 0, 0);
+
+              // Check if this session time has already passed
+              const [startHour, startMin] = scheduleItem.startTime.split(':').map(Number);
+              const sessionDateTime = new Date(sessionDate);
+              sessionDateTime.setHours(startHour, startMin, 0, 0);
+
+              // Skip if session time has already passed
+              if (sessionDateTime <= now) {
+                continue;
+              }
+
+              // Create the session
+              await offlineSessionApi.create({
+                date: sessionDate.toISOString(),
+                startTime: scheduleItem.startTime,
+                endTime: scheduleItem.endTime,
+                type: 'scheduled',
+                subject: scheduleItem.subject,
+                groupId: editingGroup._id,
+                studentIds: [],
+                attendance: [],
+              });
+              sessionsCreated++;
+            }
+          }
+
+          if (sessionsCreated > 0) {
+            toast.success(`Cập nhật lớp học thành công và tạo ${sessionsCreated} buổi học mới`);
+          } else {
+            toast.success('Cập nhật lớp học thành công');
+          }
+        } else {
+          toast.success('Cập nhật lớp học thành công');
+        }
       } else {
         const result = await groupApi.create(data);
 
@@ -570,8 +635,8 @@ export function Groups() {
             </div>
           </div>
 
-          {/* Duplicate Schedule Option - Only show when creating new class */}
-          {!editingGroup && formData.schedule.length > 0 && (
+          {/* Duplicate Schedule Option - Hiển thị khi có lịch học (cả khi tạo mới và chỉnh sửa) */}
+          {formData.schedule.length > 0 && (
             <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-3 space-y-3 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/20">
               <div className="flex items-center gap-3">
                 <input
@@ -582,7 +647,7 @@ export function Groups() {
                   className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
                 />
                 <label htmlFor="duplicateSchedule" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Tạo buổi học từ lịch (bắt đầu từ tuần này)
+                  {editingGroup ? 'Tạo thêm buổi học từ lịch (bắt đầu từ tuần này)' : 'Tạo buổi học từ lịch (bắt đầu từ tuần này)'}
                 </label>
               </div>
               {duplicateSchedule && (
