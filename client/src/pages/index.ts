@@ -1,0 +1,12 @@
+export { Dashboard } from './Dashboard';
+export { Students } from './Students';
+export { StudentDetail } from './StudentDetail';
+export { Groups } from './Groups';
+export { GroupDetail } from './GroupDetail';
+export { Attendance } from './Attendance';
+export { Payments } from './Payments';
+export { Notes } from './Notes';
+export { Guide } from './Guide';
+export { Settings } from './Settings';
+export { Login } from './Login';
+export { Users } from './Users';

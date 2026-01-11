@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(docker --version:*)",
+      "Bash(mongod:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout /t 8 /nobreak)",
+      "Bash(ping:*)",
+      "Bash(curl:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 6020 -Force\")",
+      "Bash(powershell -Command:*)",
+      "Bash(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty OwningProcess)",
+      "Bash(ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue })",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill //F //PID 40808)",
+      "Bash(taskkill //F //PID 1148)",
+      "Bash(taskkill //F //PID 50932)",
+      "Bash(taskkill //F //PID 22232)",
+      "Bash(taskkill:*)",
+      "Bash(npm run build:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
