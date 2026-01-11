@@ -18,14 +18,25 @@ import {
   getConflicts,
 } from '../services/syncService';
 import { ConflictItem } from '../services/offlineDb';
+import {
+  downloadForOffline,
+  isOfflineReady,
+  getOfflineDownloadTime,
+  clearOfflineStatus,
+  DownloadProgress,
+} from '../services/offlineDownload';
 
 // Offline Data Management Card
 function OfflineDataCard() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingApp, setDownloadingApp] = useState(false);
   const [progress, setProgress] = useState({ total: 0, current: 0, entity: '' });
+  const [appProgress, setAppProgress] = useState<DownloadProgress | null>(null);
   const [lastDownload, setLastDownload] = useState<number | null>(null);
+  const [lastAppDownload, setLastAppDownload] = useState<number | null>(null);
   const [hasData, setHasData] = useState(false);
+  const [appReady, setAppReady] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [checkingConflicts, setCheckingConflicts] = useState(false);
@@ -40,6 +51,10 @@ function OfflineDataCard() {
     // Load initial state
     getLastDownloadTime().then(setLastDownload);
     hasOfflineData().then(setHasData);
+
+    // Load app offline status
+    setAppReady(isOfflineReady());
+    setLastAppDownload(getOfflineDownloadTime());
 
     // Listen for conflicts
     const unsubConflict = addConflictListener((c) => {
@@ -78,6 +93,34 @@ function OfflineDataCard() {
       toast.error('Có lỗi khi tải dữ liệu');
     }
     setDownloading(false);
+  };
+
+  // Download entire app for offline use
+  const handleDownloadApp = async () => {
+    setDownloadingApp(true);
+    setAppProgress(null);
+    try {
+      const success = await downloadForOffline((progress) => {
+        setAppProgress(progress);
+      });
+      if (success) {
+        toast.success('Đã tải xuống ứng dụng để sử dụng offline!');
+        setAppReady(true);
+        setLastAppDownload(Date.now());
+      } else {
+        toast.error('Có lỗi khi tải ứng dụng offline');
+      }
+    } catch {
+      toast.error('Có lỗi khi tải ứng dụng offline');
+    }
+    setDownloadingApp(false);
+  };
+
+  const handleClearOffline = () => {
+    clearOfflineStatus();
+    setAppReady(false);
+    setLastAppDownload(null);
+    toast.success('Đã xóa trạng thái offline');
   };
 
   const handleCheckConflicts = async () => {
@@ -135,8 +178,8 @@ function OfflineDataCard() {
               </svg>
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Dữ liệu Offline</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Tải dữ liệu để sử dụng khi không có mạng</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Tải xuống Offline</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Tải ứng dụng và dữ liệu để sử dụng khi không có mạng</p>
             </div>
             {conflicts.length > 0 && (
               <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 rounded-full">
@@ -145,75 +188,193 @@ function OfflineDataCard() {
             )}
           </div>
 
-          {/* Status */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Trạng thái</p>
-              <div className="flex items-center gap-2 mt-1">
-                <div className={`w-2 h-2 rounded-full ${hasData ? 'bg-green-500' : 'bg-gray-400'}`} />
-                <p className="font-medium text-gray-900 dark:text-white">
-                  {hasData ? 'Đã có dữ liệu' : 'Chưa tải'}
+          {/* Download App for Offline - Main Feature */}
+          <div className="p-4 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-xl border border-violet-200 dark:border-violet-800">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-violet-500 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 dark:text-white">Tải xuống toàn bộ ứng dụng</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Tải tất cả trang, tính năng và dữ liệu để sử dụng hoàn toàn offline
                 </p>
               </div>
+              {appReady && (
+                <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 rounded-full flex-shrink-0">
+                  Sẵn sàng
+                </span>
+              )}
             </div>
-            <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Lần tải cuối</p>
-              <p className="font-medium text-gray-900 dark:text-white mt-1">
-                {lastDownload
-                  ? new Date(lastDownload).toLocaleString('vi-VN')
-                  : 'Chưa tải'}
-              </p>
+
+            {/* App Download Progress */}
+            {downloadingApp && appProgress && (
+              <div className="space-y-3 mb-4">
+                {appProgress.steps.map((step, index) => (
+                  <div key={step.id} className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      step.status === 'done' ? 'bg-green-500' :
+                      step.status === 'loading' ? 'bg-violet-500' :
+                      step.status === 'error' ? 'bg-red-500' :
+                      'bg-gray-300 dark:bg-gray-600'
+                    }`}>
+                      {step.status === 'done' ? (
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : step.status === 'loading' ? (
+                        <svg className="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                      ) : step.status === 'error' ? (
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      ) : (
+                        <span className="text-xs text-white font-medium">{index + 1}</span>
+                      )}
+                    </div>
+                    <span className={`text-sm ${
+                      step.status === 'done' ? 'text-green-700 dark:text-green-300' :
+                      step.status === 'loading' ? 'text-violet-700 dark:text-violet-300 font-medium' :
+                      step.status === 'error' ? 'text-red-700 dark:text-red-300' :
+                      'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {step.label}
+                    </span>
+                  </div>
+                ))}
+                {appProgress.error && (
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-2">{appProgress.error}</p>
+                )}
+              </div>
+            )}
+
+            {/* App Status */}
+            {!downloadingApp && (
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Trạng thái</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className={`w-2 h-2 rounded-full ${appReady ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {appReady ? 'Đã sẵn sàng' : 'Chưa tải'}
+                    </p>
+                  </div>
+                </div>
+                <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Lần tải cuối</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                    {lastAppDownload
+                      ? new Date(lastAppDownload).toLocaleString('vi-VN')
+                      : 'Chưa tải'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* App Download Actions */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={handleDownloadApp}
+                disabled={downloadingApp || !isOnline}
+                className="flex-1 sm:flex-none"
+              >
+                {downloadingApp ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Đang tải...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    {appReady ? 'Cập nhật offline' : 'Tải xuống offline'}
+                  </>
+                )}
+              </Button>
+              {appReady && (
+                <Button
+                  variant="secondary"
+                  onClick={handleClearOffline}
+                  disabled={downloadingApp}
+                  className="flex-1 sm:flex-none"
+                >
+                  Xóa cache
+                </Button>
+              )}
             </div>
           </div>
 
-          {/* Progress bar */}
-          {downloading && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">{progress.entity}</span>
-                <span className="text-gray-900 dark:text-white">{progress.current}/{progress.total}</span>
+          {/* Data Only Download */}
+          <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
               </div>
-              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-violet-500 rounded-full transition-all duration-300"
-                  style={{ width: `${(progress.current / progress.total) * 100}%` }}
-                />
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900 dark:text-white">Chỉ tải dữ liệu</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Tải học sinh, lớp học, buổi học, thanh toán
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${hasData ? 'bg-green-500' : 'bg-gray-400'}`} />
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  {hasData ? 'Đã có' : 'Chưa tải'}
+                </span>
               </div>
             </div>
-          )}
 
-          {/* Actions */}
-          <div className="flex flex-wrap gap-3">
-            <Button
-              onClick={handleDownload}
-              disabled={downloading || !isOnline}
-            >
-              {downloading ? (
-                <>
-                  <svg className="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Đang tải...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Tải dữ liệu offline
-                </>
-              )}
-            </Button>
+            {/* Data Progress bar */}
+            {downloading && (
+              <div className="space-y-2 mb-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">{progress.entity}</span>
+                  <span className="text-gray-900 dark:text-white">{progress.current}/{progress.total}</span>
+                </div>
+                <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                    style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
-            {hasData && isOnline && (
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="secondary"
-                onClick={handleCheckConflicts}
-                disabled={checkingConflicts}
+                size="sm"
+                onClick={handleDownload}
+                disabled={downloading || !isOnline}
               >
-                {checkingConflicts ? 'Đang kiểm tra...' : 'Kiểm tra xung đột'}
+                {downloading ? 'Đang tải...' : 'Tải dữ liệu'}
               </Button>
+              {hasData && isOnline && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCheckConflicts}
+                  disabled={checkingConflicts}
+                >
+                  {checkingConflicts ? 'Đang kiểm tra...' : 'Kiểm tra xung đột'}
+                </Button>
+              )}
+            </div>
+            {lastDownload && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Lần tải: {new Date(lastDownload).toLocaleString('vi-VN')}
+              </p>
             )}
           </div>
 
@@ -228,11 +389,12 @@ function OfflineDataCard() {
 
           {/* Info */}
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-            <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">Hướng dẫn</h4>
+            <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">Hướng dẫn sử dụng Offline</h4>
             <ul className="text-sm text-blue-600 dark:text-blue-400 space-y-1">
-              <li>• Tải dữ liệu khi có mạng để sử dụng offline</li>
-              <li>• Khi offline, dữ liệu sẽ được lưu tạm trên máy</li>
-              <li>• Khi online lại, kiểm tra xung đột để đồng bộ</li>
+              <li>• <strong>Tải xuống offline:</strong> Tải toàn bộ ứng dụng + dữ liệu</li>
+              <li>• <strong>Chỉ tải dữ liệu:</strong> Nếu đã tải ứng dụng, chỉ cập nhật dữ liệu</li>
+              <li>• Khi offline, tất cả các trang sẽ hoạt động bình thường</li>
+              <li>• Dữ liệu thay đổi sẽ được đồng bộ khi có mạng trở lại</li>
             </ul>
           </div>
         </CardBody>
