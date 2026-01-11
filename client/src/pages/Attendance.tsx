@@ -1359,7 +1359,31 @@ export function Attendance() {
               <input
                 type="date"
                 value={newSession.date}
-                onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  let updatedSession = { ...newSession, date: newDate };
+
+                  // Nếu đã chọn nhóm, cập nhật lại thông tin từ lịch nhóm cho ngày mới
+                  if (newSession.groupId) {
+                    const selectedGroup = groups.find(g => g._id === newSession.groupId);
+                    if (selectedGroup && selectedGroup.schedule && selectedGroup.schedule.length > 0) {
+                      const sessionDate = new Date(newDate);
+                      const dayOfWeek = sessionDate.getDay();
+                      const scheduleItem = selectedGroup.schedule.find((s: { dayOfWeek: number; startTime: string; endTime: string; subject: string }) => s.dayOfWeek === dayOfWeek);
+
+                      if (scheduleItem) {
+                        updatedSession = {
+                          ...updatedSession,
+                          startTime: scheduleItem.startTime,
+                          endTime: scheduleItem.endTime,
+                          subject: scheduleItem.subject,
+                        };
+                      }
+                    }
+                  }
+
+                  setNewSession(updatedSession);
+                }}
                 className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
               />
               <div className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white flex items-center justify-between">
@@ -1418,7 +1442,31 @@ export function Attendance() {
           <Select
             label="Lớp học"
             value={newSession.groupId}
-            onChange={(e) => setNewSession({ ...newSession, groupId: e.target.value, studentIds: [] })}
+            onChange={(e) => {
+              const selectedGroupId = e.target.value;
+              const selectedGroup = groups.find(g => g._id === selectedGroupId);
+
+              // Nếu chọn nhóm, tìm lịch học cho ngày đang chọn
+              let updatedSession = { ...newSession, groupId: selectedGroupId, studentIds: [] };
+
+              if (selectedGroup && selectedGroup.schedule && selectedGroup.schedule.length > 0) {
+                const sessionDate = new Date(newSession.date);
+                const dayOfWeek = sessionDate.getDay();
+                const scheduleItem = selectedGroup.schedule.find((s: { dayOfWeek: number; startTime: string; endTime: string; subject: string }) => s.dayOfWeek === dayOfWeek);
+
+                if (scheduleItem) {
+                  // Tự động điền thông tin từ lịch nhóm
+                  updatedSession = {
+                    ...updatedSession,
+                    startTime: scheduleItem.startTime,
+                    endTime: scheduleItem.endTime,
+                    subject: scheduleItem.subject,
+                  };
+                }
+              }
+
+              setNewSession(updatedSession);
+            }}
             options={[
               { value: '', label: 'Học sinh cá nhân' },
               ...groups.map((g) => ({ value: g._id, label: g.name })),

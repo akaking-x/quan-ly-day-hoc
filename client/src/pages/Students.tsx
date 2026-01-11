@@ -96,7 +96,11 @@ export function Students() {
   const filteredStudents = students.filter((s) => {
     if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterType && s.type !== filterType) return false;
-    if (filterGroup && s.groupId !== filterGroup) return false;
+    if (filterGroup) {
+      // groupId có thể là string hoặc object (khi populate)
+      const studentGroupId = typeof s.groupId === 'string' ? s.groupId : s.groupId?._id;
+      if (studentGroupId !== filterGroup) return false;
+    }
     if (filterGrade && s.grade !== parseInt(filterGrade)) return false;
     return true;
   });
@@ -677,7 +681,13 @@ export function Students() {
               <Select
                 label="Chọn lớp"
                 value={formData.groupId}
-                onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
+                onChange={(e) => {
+                  const selectedGroupId = e.target.value;
+                  const selectedGroup = groups.find(g => g._id === selectedGroupId);
+                  // Tự động điền học phí từ nhóm nếu có
+                  const newFee = selectedGroup?.defaultFeePerSession?.toString() || formData.feePerSession;
+                  setFormData({ ...formData, groupId: selectedGroupId, feePerSession: newFee });
+                }}
                 options={[
                   { value: '', label: 'Chọn lớp...' },
                   ...groups.map((g) => ({ value: g._id, label: g.name })),

@@ -177,7 +177,7 @@ export const generateSessions = async (req: AuthRequest, res: Response) => {
             subject: scheduleItem.subject,
             attendance: studentIds.map((id) => ({
               studentId: id,
-              status: 'present',
+              status: 'absent', // Mặc định là vắng để phải điểm danh
               feePerSession: studentFeeMap.get(id.toString()) ?? 0,
             })),
           });
@@ -260,7 +260,7 @@ export const duplicateWeekSessions = async (req: AuthRequest, res: Response) => 
             subject: sourceSession.subject,
             attendance: sourceSession.attendance.map((a) => ({
               studentId: a.studentId,
-              status: 'present', // Default to present for new sessions
+              status: 'absent', // Mặc định là vắng để phải điểm danh
               feePerSession: studentFeeMap.get(a.studentId.toString()) ?? 0,
             })),
             notes: sourceSession.notes,
