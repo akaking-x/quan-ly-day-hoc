@@ -338,6 +338,115 @@ const guideContent: Record<Language, GuideContent> = {
         ),
       },
       {
+        id: 'offline',
+        title: 'Chế độ Offline',
+        icon: (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+          </svg>
+        ),
+        content: (
+          <div className="space-y-4">
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl">
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 mb-2">Giới thiệu</h4>
+              <p className="text-emerald-700 dark:text-emerald-400 text-sm">
+                Ứng dụng hỗ trợ chế độ offline, cho phép bạn tiếp tục làm việc ngay cả khi không có kết nối internet. Dữ liệu sẽ được đồng bộ tự động khi có mạng trở lại.
+              </p>
+            </div>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white">Kiểm tra trạng thái mạng</h4>
+            <p className="text-gray-700 dark:text-gray-300">
+              Biểu tượng trạng thái mạng nằm ở <span className="font-medium text-blue-600">thanh menu trên cùng</span> (bên cạnh nút chế độ sáng/tối):
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                </svg>
+                <span className="text-green-700 dark:text-green-400 text-sm font-medium">Online - Đã kết nối</span>
+              </div>
+              <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-xl flex items-center gap-3">
+                <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3" />
+                </svg>
+                <span className="text-red-700 dark:text-red-400 text-sm font-medium">Offline - Mất kết nối</span>
+              </div>
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl flex items-center gap-3">
+                <div className="relative">
+                  <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <span className="text-amber-700 dark:text-amber-400 text-sm font-medium">Chờ đồng bộ - Nhấn để đồng bộ</span>
+              </div>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center gap-3">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span className="text-blue-700 dark:text-blue-400 text-sm font-medium">Đang đồng bộ dữ liệu...</span>
+              </div>
+            </div>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white mt-6">Tải dữ liệu offline</h4>
+            <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300">
+              <li>Vào <span className="font-medium text-blue-600">Cài đặt</span></li>
+              <li>Tìm phần <span className="font-medium">"Tải offline"</span></li>
+              <li>Nhấn <span className="font-medium">Tải dữ liệu offline</span> để lưu tất cả dữ liệu vào bộ nhớ thiết bị</li>
+              <li>Sau khi tải xong, bạn có thể sử dụng ứng dụng khi không có mạng</li>
+            </ol>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white mt-6">Các trang hỗ trợ offline</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Tổng quan</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Học sinh</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Lớp học</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Điểm danh</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Học phí</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Ghi chú</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-yellow-600 dark:text-yellow-400">~</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Cài đặt</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-red-600 dark:text-red-400">✗</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Người dùng</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              ✓ Đầy đủ tính năng | ~ Hạn chế một số tính năng | ✗ Yêu cầu kết nối mạng
+            </p>
+
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl mt-4">
+              <h4 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Lưu ý quan trọng</h4>
+              <ul className="text-yellow-700 dark:text-yellow-400 text-sm space-y-1">
+                <li>• Khi offline, dữ liệu mới sẽ được lưu cục bộ và đồng bộ khi có mạng</li>
+                <li>• Nếu có thay đổi chờ đồng bộ, biểu tượng sẽ chuyển sang màu vàng</li>
+                <li>• Nhấn vào biểu tượng để đồng bộ thủ công khi có mạng</li>
+                <li>• Khuyến nghị tải dữ liệu offline định kỳ để có dữ liệu mới nhất</li>
+              </ul>
+            </div>
+          </div>
+        ),
+      },
+      {
         id: 'tips',
         title: 'Mẹo sử dụng',
         icon: (
@@ -747,6 +856,113 @@ const guideContent: Record<Language, GuideContent> = {
               <ul className="text-yellow-700 dark:text-yellow-400 text-sm space-y-1">
                 <li>• Links only show for upcoming sessions (not past ones)</li>
                 <li>• Supports all platforms: Zoom, Google Meet, Microsoft Teams, Webex...</li>
+              </ul>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'offline',
+        title: 'Offline Mode',
+        icon: (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+          </svg>
+        ),
+        content: (
+          <div className="space-y-4">
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl">
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 mb-2">Introduction</h4>
+              <p className="text-emerald-700 dark:text-emerald-400 text-sm">
+                The app supports offline mode, allowing you to continue working even without an internet connection. Data will be automatically synced when you reconnect.
+              </p>
+            </div>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white">Check Network Status</h4>
+            <p className="text-gray-700 dark:text-gray-300">
+              The network status icon is located in the <span className="font-medium text-blue-600">top menu bar</span> (next to the theme toggle button):
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                </svg>
+                <span className="text-green-700 dark:text-green-400 text-sm font-medium">Online - Connected</span>
+              </div>
+              <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-xl flex items-center gap-3">
+                <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3" />
+                </svg>
+                <span className="text-red-700 dark:text-red-400 text-sm font-medium">Offline - Disconnected</span>
+              </div>
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl flex items-center gap-3">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span className="text-amber-700 dark:text-amber-400 text-sm font-medium">Pending sync - Click to sync</span>
+              </div>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center gap-3">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span className="text-blue-700 dark:text-blue-400 text-sm font-medium">Syncing data...</span>
+              </div>
+            </div>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white mt-6">Download Offline Data</h4>
+            <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300">
+              <li>Go to <span className="font-medium text-blue-600">Settings</span></li>
+              <li>Find the <span className="font-medium">"Download Offline"</span> section</li>
+              <li>Click <span className="font-medium">Download Offline Data</span> to save all data to device storage</li>
+              <li>Once downloaded, you can use the app without internet</li>
+            </ol>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white mt-6">Pages Supporting Offline</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Dashboard</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Students</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Classes</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Attendance</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Payments</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-green-600 dark:text-green-400">✓</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Notes</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-yellow-600 dark:text-yellow-400">~</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Settings</p>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                <span className="text-red-600 dark:text-red-400">✗</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Users</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              ✓ Full features | ~ Limited features | ✗ Requires internet
+            </p>
+
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl mt-4">
+              <h4 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Important Notes</h4>
+              <ul className="text-yellow-700 dark:text-yellow-400 text-sm space-y-1">
+                <li>• When offline, new data is saved locally and synced when connected</li>
+                <li>• If there are pending changes, the icon turns yellow</li>
+                <li>• Click the icon to manually sync when online</li>
+                <li>• Recommended to download offline data regularly for latest data</li>
               </ul>
             </div>
           </div>

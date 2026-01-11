@@ -28,7 +28,18 @@
       "Bash(git config:*)",
       "Bash(git remote:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@103.82.39.35 -p 22 \"uname -a && docker --version && docker-compose --version\")",
+      "Bash(ssh root@103.82.39.35 \"cd /root && ls -la && df -h && free -m\")",
+      "Bash(ssh root@103.82.39.35 \"mkdir -p /opt/quan-ly-day-hoc && cd /opt/quan-ly-day-hoc && git clone https://github.com/akaking-x/quan-ly-day-hoc.git . 2>&1 || \\(cd /opt/quan-ly-day-hoc && git pull origin main\\)\")",
+      "Bash(ssh root@103.82.39.35 \"ls -la /opt/quan-ly-day-hoc/\")",
+      "Bash(ssh root@103.82.39.35 \"cat > /opt/quan-ly-day-hoc/.env << ''EOF''\n# MongoDB\nMONGODB_URI=mongodb://mongo:27017/tuition-management\n\n# JWT\nJWT_SECRET=your-super-secret-jwt-key-change-in-production\n\n# Server\nPORT=3001\nNODE_ENV=production\nEOF\ncat /opt/quan-ly-day-hoc/.env\")",
+      "Bash(ssh root@103.82.39.35 \"cd /opt/quan-ly-day-hoc && docker-compose up -d --build\")",
+      "Bash(ssh root@103.82.39.35 \"cd /opt/quan-ly-day-hoc && git pull origin main && docker-compose up -d --build\")",
+      "Bash(ssh root@103.82.39.35 \"cd /opt/quan-ly-day-hoc && git pull origin main && docker-compose up -d --build client\")",
+      "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && git pull && docker compose build --no-cache && docker compose up -d\")",
+      "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && docker-compose build && docker-compose up -d\")",
+      "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && git pull && docker-compose build && docker-compose up -d\")"
     ]
   }
 }
