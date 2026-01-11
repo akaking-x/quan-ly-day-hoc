@@ -701,6 +701,11 @@ export function Settings() {
   }, []);
 
   const loadDbInfo = async () => {
+    // Skip loading database info when offline
+    if (!navigator.onLine) {
+      return;
+    }
+
     try {
       const res = await databaseApi.getInfo();
       if (res.success && res.data) {
@@ -796,19 +801,68 @@ export function Settings() {
 
   const loadSettings = async () => {
     setLoading(true);
-    const res = await settingsApi.get();
-    if (res.success && res.data) {
-      setSettings(res.data);
-      setFormData({
-        defaultFeePerSession: res.data.defaultFeePerSession.toString(),
-        reminderDays: res.data.reminderDays.toString(),
-        workingHoursStart: (res.data.workingHoursStart ?? 6).toString(),
-        workingHoursEnd: (res.data.workingHoursEnd ?? 22).toString(),
-        gradientFrom: res.data.gradientFrom || '#3B82F6',
-        gradientTo: res.data.gradientTo || '#8B5CF6',
-      });
-      setSubjects(res.data.subjects || []);
+
+    // Try loading from server first
+    try {
+      const res = await settingsApi.get();
+      if (res.success && res.data) {
+        setSettings(res.data);
+        setFormData({
+          defaultFeePerSession: res.data.defaultFeePerSession.toString(),
+          reminderDays: res.data.reminderDays.toString(),
+          workingHoursStart: (res.data.workingHoursStart ?? 6).toString(),
+          workingHoursEnd: (res.data.workingHoursEnd ?? 22).toString(),
+          gradientFrom: res.data.gradientFrom || '#3B82F6',
+          gradientTo: res.data.gradientTo || '#8B5CF6',
+        });
+        setSubjects(res.data.subjects || []);
+        // Save to localStorage for offline use
+        localStorage.setItem('cachedSettings', JSON.stringify(res.data));
+        setLoading(false);
+        return;
+      }
+    } catch {
+      // Fall through to offline fallback
     }
+
+    // Fallback: Load from localStorage when offline
+    const cached = localStorage.getItem('cachedSettings');
+    if (cached) {
+      try {
+        const data = JSON.parse(cached) as SettingsType;
+        setSettings(data);
+        setFormData({
+          defaultFeePerSession: data.defaultFeePerSession.toString(),
+          reminderDays: data.reminderDays.toString(),
+          workingHoursStart: (data.workingHoursStart ?? 6).toString(),
+          workingHoursEnd: (data.workingHoursEnd ?? 22).toString(),
+          gradientFrom: data.gradientFrom || '#3B82F6',
+          gradientTo: data.gradientTo || '#8B5CF6',
+        });
+        setSubjects(data.subjects || []);
+      } catch {
+        // Use defaults
+        setFormData({
+          defaultFeePerSession: '200000',
+          reminderDays: '5',
+          workingHoursStart: '6',
+          workingHoursEnd: '22',
+          gradientFrom: '#3B82F6',
+          gradientTo: '#8B5CF6',
+        });
+      }
+    } else {
+      // Use defaults
+      setFormData({
+        defaultFeePerSession: '200000',
+        reminderDays: '5',
+        workingHoursStart: '6',
+        workingHoursEnd: '22',
+        gradientFrom: '#3B82F6',
+        gradientTo: '#8B5CF6',
+      });
+    }
+
     setLoading(false);
   };
 

@@ -617,14 +617,89 @@ export const offlineReportApi = {
   },
 
   async getMonthly(year: number, month: number) {
-    // This requires server-side calculation, just pass through
     if (isOnline()) {
-      return reportApi.getMonthly(year, month);
+      try {
+        return await reportApi.getMonthly(year, month);
+      } catch {
+        // Fall through to offline calculation
+      }
     }
 
+    // Calculate monthly report from local data
+    const students = await offlineStorage.getAll<Student>('students');
+    const sessions = await offlineStorage.getAll<Session>('sessions');
+    const payments = await offlineStorage.getAll<Payment>('payments');
+
+    // Filter sessions for the specified month
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 0, 23, 59, 59);
+
+    const monthSessions = sessions.filter((s) => {
+      const sDate = new Date(s.date);
+      return sDate >= monthStart && sDate <= monthEnd;
+    });
+
+    // Filter payments for the specified month
+    const monthPayments = payments.filter((p) => {
+      const pDate = new Date(p.paymentDate);
+      return pDate >= monthStart && pDate <= monthEnd;
+    });
+
+    // Calculate per-student data
+    const activeStudents = students.filter((s) => s.active !== false);
+    const studentReports = activeStudents.map((student) => {
+      // Count sessions attended by this student in this month
+      const studentMonthSessions = monthSessions.filter((s) => {
+        const attendance = s.attendance?.find((a) => {
+          const studentId = typeof a.studentId === 'string' ? a.studentId : a.studentId?._id;
+          return studentId === student._id && a.status === 'present';
+        });
+        return !!attendance;
+      });
+
+      const sessionCount = studentMonthSessions.length;
+      const totalFee = sessionCount * student.feePerSession;
+
+      // Calculate payments for this student in this month
+      const studentPayments = monthPayments.filter((p) => {
+        const paymentStudentId = typeof p.studentId === 'string' ? p.studentId : (p.studentId as Student)?._id;
+        return paymentStudentId === student._id;
+      });
+
+      const paid = studentPayments.reduce((sum, p) => sum + p.amount, 0);
+      const balance = totalFee - paid;
+
+      return {
+        student: {
+          _id: student._id,
+          name: student.name,
+          feePerSession: student.feePerSession,
+        },
+        sessions: sessionCount,
+        totalFee,
+        paid,
+        balance,
+        isPaid: balance <= 0,
+      };
+    });
+
+    // Calculate totals
+    const totalFees = studentReports.reduce((sum, s) => sum + s.totalFee, 0);
+    const totalRevenue = studentReports.reduce((sum, s) => sum + s.paid, 0);
+    const totalDebt = studentReports.reduce((sum, s) => sum + Math.max(0, s.balance), 0);
+    const sessionsCount = monthSessions.length;
+
     return {
-      success: false,
-      error: 'Monthly report requires network connection',
+      success: true,
+      data: {
+        year,
+        month,
+        sessionsCount,
+        totalRevenue,
+        totalFees,
+        totalDebt,
+        students: studentReports,
+      },
     };
   },
 
