@@ -78,6 +78,7 @@ export function Groups() {
   });
   const [duplicateSchedule, setDuplicateSchedule] = useState(false);
   const [weeksToGenerate, setWeeksToGenerate] = useState(4);
+  const [scheduleDirection, setScheduleDirection] = useState<'forward' | 'backward' | 'both'>('forward');
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
@@ -118,6 +119,7 @@ export function Groups() {
     });
     setDuplicateSchedule(false);
     setWeeksToGenerate(4);
+    setScheduleDirection('forward');
     setIsModalOpen(true);
   };
 
@@ -132,6 +134,7 @@ export function Groups() {
     });
     setDuplicateSchedule(false);
     setWeeksToGenerate(4);
+    setScheduleDirection('forward');
     setIsModalOpen(true);
   };
 
@@ -147,6 +150,7 @@ export function Groups() {
     });
     setDuplicateSchedule(false);
     setWeeksToGenerate(4);
+    setScheduleDirection('forward');
     setIsModalOpen(true);
   };
 
@@ -177,6 +181,80 @@ export function Groups() {
     });
   };
 
+  // Helper function to generate sessions for a group
+  const generateSessionsForGroup = async (
+    groupId: string,
+    schedule: typeof formData.schedule,
+    weeks: number,
+    direction: 'forward' | 'backward' | 'both'
+  ): Promise<number> => {
+    const now = new Date();
+    let sessionsCreated = 0;
+
+    const createSessionsInDirection = async (isForward: boolean) => {
+      for (let week = 0; week < weeks; week++) {
+        for (const scheduleItem of schedule) {
+          const sessionDate = new Date(now);
+          const currentDayOfWeek = now.getDay();
+          const targetDayOfWeek = scheduleItem.dayOfWeek;
+
+          let daysOffset = targetDayOfWeek - currentDayOfWeek;
+
+          if (isForward) {
+            // Forward: add weeks
+            daysOffset += week * 7;
+            // Skip if first week and day has passed (for forward only)
+            if (week === 0 && daysOffset < 0) {
+              continue;
+            }
+          } else {
+            // Backward: subtract weeks
+            daysOffset -= week * 7;
+            // Skip if first week and day hasn't come yet (for backward only)
+            if (week === 0 && daysOffset > 0) {
+              continue;
+            }
+          }
+
+          sessionDate.setDate(now.getDate() + daysOffset);
+          sessionDate.setHours(0, 0, 0, 0);
+
+          // For forward direction, skip if session time has passed
+          if (isForward) {
+            const [startHour, startMin] = scheduleItem.startTime.split(':').map(Number);
+            const sessionDateTime = new Date(sessionDate);
+            sessionDateTime.setHours(startHour, startMin, 0, 0);
+            if (sessionDateTime <= now) {
+              continue;
+            }
+          }
+
+          // Create the session
+          await offlineSessionApi.create({
+            date: sessionDate.toISOString(),
+            startTime: scheduleItem.startTime,
+            endTime: scheduleItem.endTime,
+            type: 'scheduled',
+            subject: scheduleItem.subject,
+            groupId,
+            studentIds: [],
+            attendance: [],
+          });
+          sessionsCreated++;
+        }
+      }
+    };
+
+    if (direction === 'forward' || direction === 'both') {
+      await createSessionsInDirection(true);
+    }
+    if (direction === 'backward' || direction === 'both') {
+      await createSessionsInDirection(false);
+    }
+
+    return sessionsCreated;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreating(true);
@@ -195,58 +273,12 @@ export function Groups() {
 
         // Nếu chọn nhân bản lịch khi chỉnh sửa
         if (duplicateSchedule && formData.schedule.length > 0) {
-          const now = new Date();
-          let sessionsCreated = 0;
-
-          // For each week
-          for (let week = 0; week < weeksToGenerate; week++) {
-            // For each schedule item
-            for (const scheduleItem of formData.schedule) {
-              // Calculate the date for this session
-              const sessionDate = new Date(now);
-
-              // Get current day of week (0 = Sunday, 1 = Monday, ...)
-              const currentDayOfWeek = now.getDay();
-              const targetDayOfWeek = scheduleItem.dayOfWeek;
-
-              // Calculate days until target day in current week
-              let daysUntil = targetDayOfWeek - currentDayOfWeek;
-
-              // Add weeks offset
-              daysUntil += week * 7;
-
-              // If it's the first week and the day has passed, skip
-              if (week === 0 && daysUntil < 0) {
-                continue;
-              }
-
-              sessionDate.setDate(now.getDate() + daysUntil);
-              sessionDate.setHours(0, 0, 0, 0);
-
-              // Check if this session time has already passed
-              const [startHour, startMin] = scheduleItem.startTime.split(':').map(Number);
-              const sessionDateTime = new Date(sessionDate);
-              sessionDateTime.setHours(startHour, startMin, 0, 0);
-
-              // Skip if session time has already passed
-              if (sessionDateTime <= now) {
-                continue;
-              }
-
-              // Create the session
-              await offlineSessionApi.create({
-                date: sessionDate.toISOString(),
-                startTime: scheduleItem.startTime,
-                endTime: scheduleItem.endTime,
-                type: 'scheduled',
-                subject: scheduleItem.subject,
-                groupId: editingGroup._id,
-                studentIds: [],
-                attendance: [],
-              });
-              sessionsCreated++;
-            }
-          }
+          const sessionsCreated = await generateSessionsForGroup(
+            editingGroup._id,
+            formData.schedule,
+            weeksToGenerate,
+            scheduleDirection
+          );
 
           if (sessionsCreated > 0) {
             toast.success(`Cập nhật lớp học thành công và tạo ${sessionsCreated} buổi học mới`);
@@ -261,59 +293,12 @@ export function Groups() {
 
         // If duplicate schedule is enabled and we have a schedule
         if (duplicateSchedule && formData.schedule.length > 0 && result.success && result.data) {
-          const newGroupId = result.data._id;
-          const now = new Date();
-          let sessionsCreated = 0;
-
-          // For each week
-          for (let week = 0; week < weeksToGenerate; week++) {
-            // For each schedule item
-            for (const scheduleItem of formData.schedule) {
-              // Calculate the date for this session
-              const sessionDate = new Date(now);
-
-              // Get current day of week (0 = Sunday, 1 = Monday, ...)
-              const currentDayOfWeek = now.getDay();
-              const targetDayOfWeek = scheduleItem.dayOfWeek;
-
-              // Calculate days until target day in current week
-              let daysUntil = targetDayOfWeek - currentDayOfWeek;
-
-              // Add weeks offset
-              daysUntil += week * 7;
-
-              // If it's the first week and the day has passed, skip
-              if (week === 0 && daysUntil < 0) {
-                continue;
-              }
-
-              sessionDate.setDate(now.getDate() + daysUntil);
-              sessionDate.setHours(0, 0, 0, 0);
-
-              // Check if this session time has already passed
-              const [startHour, startMin] = scheduleItem.startTime.split(':').map(Number);
-              const sessionDateTime = new Date(sessionDate);
-              sessionDateTime.setHours(startHour, startMin, 0, 0);
-
-              // Skip if session time has already passed
-              if (sessionDateTime <= now) {
-                continue;
-              }
-
-              // Create the session
-              await offlineSessionApi.create({
-                date: sessionDate.toISOString(),
-                startTime: scheduleItem.startTime,
-                endTime: scheduleItem.endTime,
-                type: 'scheduled',
-                subject: scheduleItem.subject,
-                groupId: newGroupId,
-                studentIds: [],
-                attendance: [],
-              });
-              sessionsCreated++;
-            }
-          }
+          const sessionsCreated = await generateSessionsForGroup(
+            result.data._id,
+            formData.schedule,
+            weeksToGenerate,
+            scheduleDirection
+          );
 
           if (sessionsCreated > 0) {
             toast.success(`Thêm lớp học thành công và tạo ${sessionsCreated} buổi học`);
@@ -674,27 +659,71 @@ export function Groups() {
                   className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
                 />
                 <label htmlFor="duplicateSchedule" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {editingGroup ? 'Tạo thêm buổi học từ lịch (bắt đầu từ tuần này)' : 'Tạo buổi học từ lịch (bắt đầu từ tuần này)'}
+                  {editingGroup ? 'Tạo thêm buổi học từ lịch' : 'Tạo buổi học từ lịch'}
                 </label>
               </div>
               {duplicateSchedule && (
-                <div className="flex items-center gap-3 pl-7">
-                  <label className="text-sm text-gray-600 dark:text-gray-400">Số tuần:</label>
-                  <Select
-                    value={weeksToGenerate.toString()}
-                    onChange={(e) => setWeeksToGenerate(parseInt(e.target.value))}
-                    options={[
-                      { value: '1', label: '1 tuần' },
-                      { value: '2', label: '2 tuần' },
-                      { value: '4', label: '4 tuần' },
-                      { value: '8', label: '8 tuần' },
-                      { value: '12', label: '12 tuần' },
-                    ]}
-                    className="w-28"
-                  />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    (Bỏ qua buổi đã qua)
-                  </span>
+                <div className="space-y-3 pl-7">
+                  {/* Direction selection */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="text-sm text-gray-600 dark:text-gray-400">Hướng:</label>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setScheduleDirection('backward')}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                          scheduleDirection === 'backward'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        ← Lùi
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setScheduleDirection('forward')}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                          scheduleDirection === 'forward'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        Tiến →
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setScheduleDirection('both')}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                          scheduleDirection === 'both'
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        ← Cả hai →
+                      </button>
+                    </div>
+                  </div>
+                  {/* Weeks selection */}
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-gray-600 dark:text-gray-400">Số tuần:</label>
+                    <Select
+                      value={weeksToGenerate.toString()}
+                      onChange={(e) => setWeeksToGenerate(parseInt(e.target.value))}
+                      options={[
+                        { value: '1', label: '1 tuần' },
+                        { value: '2', label: '2 tuần' },
+                        { value: '4', label: '4 tuần' },
+                        { value: '8', label: '8 tuần' },
+                        { value: '12', label: '12 tuần' },
+                      ]}
+                      className="w-28"
+                    />
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {scheduleDirection === 'forward' && '(từ tuần này về sau)'}
+                      {scheduleDirection === 'backward' && '(từ tuần này về trước)'}
+                      {scheduleDirection === 'both' && '(mỗi hướng)'}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>

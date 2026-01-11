@@ -193,10 +193,10 @@ export const generateSessions = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Duplicate a week's sessions to subsequent weeks
+// Duplicate a week's sessions to other weeks (forward, backward, or both)
 export const duplicateWeekSessions = async (req: AuthRequest, res: Response) => {
   try {
-    const { weekStartDate, numberOfWeeks } = req.body;
+    const { weekStartDate, numberOfWeeks, direction = 'forward' } = req.body;
 
     if (!weekStartDate || !numberOfWeeks || numberOfWeeks < 1) {
       return res.status(400).json({ success: false, error: 'Invalid parameters' });
@@ -226,49 +226,59 @@ export const duplicateWeekSessions = async (req: AuthRequest, res: Response) => 
     const students = await Student.find({ _id: { $in: allStudentIds } });
     const studentFeeMap = new Map(students.map((s) => [s._id.toString(), s.feePerSession]));
 
-    const createdSessions = [];
+    const createdSessions: typeof sourceSessions = [];
 
-    // Duplicate to each subsequent week
-    for (let weekOffset = 1; weekOffset <= numberOfWeeks; weekOffset++) {
-      for (const sourceSession of sourceSessions) {
-        const sourceDate = new Date(sourceSession.date);
-        const newDate = new Date(sourceDate);
-        newDate.setDate(newDate.getDate() + (weekOffset * 7));
+    // Helper function to create sessions in a direction
+    const createSessionsInDirection = async (isForward: boolean) => {
+      for (let weekOffset = 1; weekOffset <= numberOfWeeks; weekOffset++) {
+        for (const sourceSession of sourceSessions) {
+          const sourceDate = new Date(sourceSession.date);
+          const newDate = new Date(sourceDate);
+          newDate.setDate(newDate.getDate() + (isForward ? weekOffset : -weekOffset) * 7);
 
-        // Check if session already exists on the target date
-        const targetDayStart = new Date(newDate);
-        targetDayStart.setHours(0, 0, 0, 0);
-        const targetDayEnd = new Date(newDate);
-        targetDayEnd.setHours(23, 59, 59, 999);
+          // Check if session already exists on the target date
+          const targetDayStart = new Date(newDate);
+          targetDayStart.setHours(0, 0, 0, 0);
+          const targetDayEnd = new Date(newDate);
+          targetDayEnd.setHours(23, 59, 59, 999);
 
-        const existingSession = await Session.findOne({
-          userId: req.user?._id,
-          date: { $gte: targetDayStart, $lte: targetDayEnd },
-          startTime: sourceSession.startTime,
-          endTime: sourceSession.endTime,
-        });
-
-        if (!existingSession) {
-          const newSession = new Session({
+          const existingSession = await Session.findOne({
             userId: req.user?._id,
-            date: newDate,
+            date: { $gte: targetDayStart, $lte: targetDayEnd },
             startTime: sourceSession.startTime,
             endTime: sourceSession.endTime,
-            groupId: sourceSession.groupId,
-            studentIds: sourceSession.studentIds,
-            type: sourceSession.type,
-            subject: sourceSession.subject,
-            attendance: sourceSession.attendance.map((a) => ({
-              studentId: a.studentId,
-              status: 'absent', // Mặc định là vắng để phải điểm danh
-              feePerSession: studentFeeMap.get(a.studentId.toString()) ?? 0,
-            })),
-            notes: sourceSession.notes,
           });
-          await newSession.save();
-          createdSessions.push(newSession);
+
+          if (!existingSession) {
+            const newSession = new Session({
+              userId: req.user?._id,
+              date: newDate,
+              startTime: sourceSession.startTime,
+              endTime: sourceSession.endTime,
+              groupId: sourceSession.groupId,
+              studentIds: sourceSession.studentIds,
+              type: sourceSession.type,
+              subject: sourceSession.subject,
+              attendance: sourceSession.attendance.map((a) => ({
+                studentId: a.studentId,
+                status: 'absent', // Mặc định là vắng để phải điểm danh
+                feePerSession: studentFeeMap.get(a.studentId.toString()) ?? 0,
+              })),
+              notes: sourceSession.notes,
+            });
+            await newSession.save();
+            createdSessions.push(newSession);
+          }
         }
       }
+    };
+
+    // Create sessions based on direction
+    if (direction === 'forward' || direction === 'both') {
+      await createSessionsInDirection(true);
+    }
+    if (direction === 'backward' || direction === 'both') {
+      await createSessionsInDirection(false);
     }
 
     res.status(201).json({ success: true, data: createdSessions, message: `Created ${createdSessions.length} sessions` });

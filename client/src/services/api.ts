@@ -133,7 +133,7 @@ export const sessionApi = {
     api.get<ApiResponse<Session[]>>('/sessions/calendar', { params: { year, month } }).then((r) => r.data),
   generate: (data: { groupId: string; startDate: string; endDate: string }) =>
     api.post<ApiResponse<Session[]>>('/sessions/generate', data).then((r) => r.data),
-  duplicateWeek: (data: { weekStartDate: string; numberOfWeeks: number }) =>
+  duplicateWeek: (data: { weekStartDate: string; numberOfWeeks: number; direction?: 'forward' | 'backward' | 'both' }) =>
     api.post<ApiResponse<Session[]>>('/sessions/duplicate-week', data).then((r) => r.data),
 };
 

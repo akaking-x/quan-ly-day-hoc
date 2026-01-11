@@ -449,7 +449,7 @@ export const offlineSessionApi = {
     return { success: true, data: filtered };
   },
 
-  async duplicateWeek(data: { weekStartDate: string; numberOfWeeks: number }): Promise<ApiResponse<Session[]>> {
+  async duplicateWeek(data: { weekStartDate: string; numberOfWeeks: number; direction?: 'forward' | 'backward' | 'both' }): Promise<ApiResponse<Session[]>> {
     if (isOnline()) {
       try {
         const result = await sessionApi.duplicateWeek(data);
@@ -468,6 +468,7 @@ export const offlineSessionApi = {
     const weekStart = new Date(data.weekStartDate);
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
+    const direction = data.direction || 'forward';
 
     const sessions = await offlineStorage.getAll<Session>('sessions');
     const weekSessions = sessions.filter((s) => {
@@ -477,27 +478,36 @@ export const offlineSessionApi = {
 
     const createdSessions: Session[] = [];
 
-    for (let week = 1; week <= data.numberOfWeeks; week++) {
-      for (const session of weekSessions) {
-        const originalDate = new Date(session.date);
-        const newDate = new Date(originalDate);
-        newDate.setDate(newDate.getDate() + week * 7);
+    const createSessionsInDirection = async (isForward: boolean) => {
+      for (let week = 1; week <= data.numberOfWeeks; week++) {
+        for (const session of weekSessions) {
+          const originalDate = new Date(session.date);
+          const newDate = new Date(originalDate);
+          newDate.setDate(newDate.getDate() + (isForward ? week : -week) * 7);
 
-        const newSession: Session = {
-          ...session,
-          _id: generateTempId(),
-          date: newDate.toISOString(),
-          attendance: session.attendance.map((a) => ({
-            studentId: typeof a.studentId === 'string' ? a.studentId : a.studentId._id,
-            status: 'absent' as const,
-          })),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+          const newSession: Session = {
+            ...session,
+            _id: generateTempId(),
+            date: newDate.toISOString(),
+            attendance: session.attendance.map((a) => ({
+              studentId: typeof a.studentId === 'string' ? a.studentId : a.studentId._id,
+              status: 'absent' as const,
+            })),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
 
-        await offlineStorage.save('sessions', newSession);
-        createdSessions.push(newSession);
+          await offlineStorage.save('sessions', newSession);
+          createdSessions.push(newSession);
+        }
       }
+    };
+
+    if (direction === 'forward' || direction === 'both') {
+      await createSessionsInDirection(true);
+    }
+    if (direction === 'backward' || direction === 'both') {
+      await createSessionsInDirection(false);
     }
 
     return { success: true, data: createdSessions };

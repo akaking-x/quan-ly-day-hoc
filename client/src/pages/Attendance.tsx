@@ -112,6 +112,7 @@ export function Attendance() {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [attendanceData, setAttendanceData] = useState<{ studentId: string; status: AttendanceStatus; note: string }[]>([]);
   const [duplicateWeeks, setDuplicateWeeks] = useState('4');
+  const [duplicateDirection, setDuplicateDirection] = useState<'forward' | 'backward' | 'both'>('forward');
   const [duplicating, setDuplicating] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
 
@@ -530,12 +531,14 @@ export function Attendance() {
       const result = await offlineSessionApi.duplicateWeek({
         weekStartDate: selectedWeekStart.toISOString(),
         numberOfWeeks: parseInt(duplicateWeeks),
+        direction: duplicateDirection,
       });
 
       if (result.success) {
         toast.success(`Đã tạo ${result.data?.length || 0} buổi học mới`);
         setIsDuplicateModalOpen(false);
         setSelectedWeekStart(null);
+        setDuplicateDirection('forward'); // Reset to default
         await loadData();
         restoreScroll();
       } else {
@@ -1596,6 +1599,46 @@ export function Attendance() {
             </p>
           </div>
 
+          {/* Direction selection */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Hướng nhân bản</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setDuplicateDirection('backward')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
+                  duplicateDirection === 'backward'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                ← Lùi (về quá khứ)
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuplicateDirection('forward')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
+                  duplicateDirection === 'forward'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                Tiến (tương lai) →
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuplicateDirection('both')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
+                  duplicateDirection === 'both'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                ← Cả hai →
+              </button>
+            </div>
+          </div>
+
           <Input
             label="Số tuần cần nhân bản"
             type="number"
@@ -1607,8 +1650,15 @@ export function Attendance() {
           />
 
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            Các buổi học sẽ được tạo cho <strong>{duplicateWeeks}</strong> tuần tiếp theo,
-            bắt đầu từ tuần sau tuần đã chọn.
+            {duplicateDirection === 'forward' && (
+              <>Các buổi học sẽ được tạo cho <strong>{duplicateWeeks}</strong> tuần tiếp theo (tương lai).</>
+            )}
+            {duplicateDirection === 'backward' && (
+              <>Các buổi học sẽ được tạo cho <strong>{duplicateWeeks}</strong> tuần về trước (quá khứ).</>
+            )}
+            {duplicateDirection === 'both' && (
+              <>Các buổi học sẽ được tạo cho <strong>{duplicateWeeks}</strong> tuần mỗi hướng (cả quá khứ và tương lai).</>
+            )}
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -1661,6 +1711,46 @@ export function Attendance() {
             </div>
           </div>
 
+          {/* Direction selection */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Hướng nhân bản</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setDuplicateDirection('backward')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
+                  duplicateDirection === 'backward'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                ← Lùi
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuplicateDirection('forward')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
+                  duplicateDirection === 'forward'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                Tiến →
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuplicateDirection('both')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
+                  duplicateDirection === 'both'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                ← Cả hai →
+              </button>
+            </div>
+          </div>
+
           <Input
             label="Số tuần cần nhân bản"
             type="number"
@@ -1672,7 +1762,15 @@ export function Attendance() {
           />
 
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            Các buổi học trong các ngày đã chọn sẽ được tạo lại cho <strong>{duplicateWeeks}</strong> tuần tiếp theo.
+            {duplicateDirection === 'forward' && (
+              <>Các buổi học sẽ được tạo cho <strong>{duplicateWeeks}</strong> tuần tiếp theo.</>
+            )}
+            {duplicateDirection === 'backward' && (
+              <>Các buổi học sẽ được tạo cho <strong>{duplicateWeeks}</strong> tuần về trước.</>
+            )}
+            {duplicateDirection === 'both' && (
+              <>Các buổi học sẽ được tạo cho <strong>{duplicateWeeks}</strong> tuần mỗi hướng.</>
+            )}
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -1686,32 +1784,44 @@ export function Attendance() {
                 try {
                   // Duplicate sessions for each selected day
                   let totalCreated = 0;
-                  for (const day of selectedDays) {
-                    const daySessions = getSessionsForDay(day);
-                    for (let week = 1; week <= parseInt(duplicateWeeks); week++) {
-                      for (const session of daySessions) {
-                        const newDate = new Date(day);
-                        newDate.setDate(newDate.getDate() + week * 7);
 
-                        await offlineSessionApi.create({
-                          date: newDate.toISOString(),
-                          startTime: session.startTime,
-                          endTime: session.endTime,
-                          type: session.type as 'scheduled' | 'makeup',
-                          subject: session.subject,
-                          groupId: session.groupId ? (typeof session.groupId === 'string' ? session.groupId : session.groupId._id) : undefined,
-                          studentIds: session.attendance.map(a => typeof a.studentId === 'string' ? a.studentId : a.studentId._id),
-                          attendance: session.attendance.map(a => ({
-                            studentId: typeof a.studentId === 'string' ? a.studentId : a.studentId._id,
-                            status: 'absent' as AttendanceStatus,
-                          })),
-                          notes: session.notes,
-                        });
-                        totalCreated++;
+                  const createSessionsInDirection = async (isForward: boolean) => {
+                    for (const day of selectedDays) {
+                      const daySessions = getSessionsForDay(day);
+                      for (let week = 1; week <= parseInt(duplicateWeeks); week++) {
+                        for (const session of daySessions) {
+                          const newDate = new Date(day);
+                          newDate.setDate(newDate.getDate() + (isForward ? week : -week) * 7);
+
+                          await offlineSessionApi.create({
+                            date: newDate.toISOString(),
+                            startTime: session.startTime,
+                            endTime: session.endTime,
+                            type: session.type as 'scheduled' | 'makeup',
+                            subject: session.subject,
+                            groupId: session.groupId ? (typeof session.groupId === 'string' ? session.groupId : session.groupId._id) : undefined,
+                            studentIds: session.attendance.map(a => typeof a.studentId === 'string' ? a.studentId : a.studentId._id),
+                            attendance: session.attendance.map(a => ({
+                              studentId: typeof a.studentId === 'string' ? a.studentId : a.studentId._id,
+                              status: 'absent' as AttendanceStatus,
+                            })),
+                            notes: session.notes,
+                          });
+                          totalCreated++;
+                        }
                       }
                     }
+                  };
+
+                  if (duplicateDirection === 'forward' || duplicateDirection === 'both') {
+                    await createSessionsInDirection(true);
                   }
+                  if (duplicateDirection === 'backward' || duplicateDirection === 'both') {
+                    await createSessionsInDirection(false);
+                  }
+
                   toast.success(`Đã tạo ${totalCreated} buổi học mới`);
+                  setDuplicateDirection('forward'); // Reset to default
                   setIsDuplicateDaysModalOpen(false);
                   clearMultiSelect();
                   await loadData();
