@@ -39,7 +39,8 @@
       "Bash(ssh root@103.82.39.35 \"cd /opt/quan-ly-day-hoc && git pull origin main && docker-compose up -d --build client\")",
       "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && git pull && docker compose build --no-cache && docker compose up -d\")",
       "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && docker-compose build && docker-compose up -d\")",
-      "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && git pull && docker-compose build && docker-compose up -d\")"
+      "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && git pull && docker-compose build && docker-compose up -d\")",
+      "Bash(git checkout:*)"
     ]
   }
 }
