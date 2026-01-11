@@ -40,7 +40,14 @@
       "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && git pull && docker compose build --no-cache && docker compose up -d\")",
       "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && docker-compose build && docker-compose up -d\")",
       "Bash(ssh root@103.82.39.35 -p 22 \"cd /opt/quan-ly-day-hoc && git pull && docker-compose build && docker-compose up -d\")",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(railway up:*)",
+      "Bash(dir:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(gh run list:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no -p 22 root@103.82.39.35 \"cd /opt/quan-ly-day-hoc && git status && git log --oneline -3\")",
+      "Bash(ssh:*)"
     ]
   }
 }

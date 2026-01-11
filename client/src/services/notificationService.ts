@@ -4,16 +4,18 @@ export interface NotificationSettings {
   enabled: boolean;
   soundEnabled: boolean;
   minutesBefore: number; // 5, 10, 15, 30
+  soundDuration: 'short' | 'medium' | 'long'; // Độ dài chuông
 }
 
 const STORAGE_KEY = 'notification-settings';
 const SCHEDULED_KEY = 'scheduled-notifications';
 
-// Default settings
+// Default settings - Mặc định tắt thông báo
 const defaultSettings: NotificationSettings = {
-  enabled: true,
+  enabled: false,
   soundEnabled: true,
   minutesBefore: 5,
+  soundDuration: 'medium',
 };
 
 // Get notification settings from localStorage
@@ -66,30 +68,61 @@ export const getNotificationPermission = (): NotificationPermission => {
   return Notification.permission;
 };
 
+// Sound duration configurations
+const soundDurations = {
+  short: { duration: 0.8, repeats: 1 },
+  medium: { duration: 1.5, repeats: 2 },
+  long: { duration: 3.0, repeats: 3 },
+};
+
+// Play a single notification chime
+const playChime = (audioContext: AudioContext, startTime: number, volume: number = 0.3): void => {
+  const oscillator1 = audioContext.createOscillator();
+  const oscillator2 = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  oscillator1.connect(gainNode);
+  oscillator2.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+
+  oscillator1.type = 'sine';
+  oscillator2.type = 'sine';
+
+  // Pleasant two-tone chime (like a doorbell)
+  oscillator1.frequency.setValueAtTime(659.25, startTime); // E5
+  oscillator1.frequency.setValueAtTime(783.99, startTime + 0.15); // G5
+  oscillator1.frequency.setValueAtTime(987.77, startTime + 0.3); // B5
+
+  oscillator2.frequency.setValueAtTime(329.63, startTime); // E4 (harmony)
+  oscillator2.frequency.setValueAtTime(392.00, startTime + 0.15); // G4
+  oscillator2.frequency.setValueAtTime(493.88, startTime + 0.3); // B4
+
+  // Volume envelope
+  gainNode.gain.setValueAtTime(0, startTime);
+  gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.05);
+  gainNode.gain.setValueAtTime(volume, startTime + 0.35);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.6);
+
+  oscillator1.start(startTime);
+  oscillator1.stop(startTime + 0.6);
+  oscillator2.start(startTime);
+  oscillator2.stop(startTime + 0.6);
+};
+
 // Play notification sound
 export const playNotificationSound = (): void => {
   const settings = getNotificationSettings();
   if (!settings.soundEnabled) return;
 
   try {
-    // Create audio context for notification sound
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    const config = soundDurations[settings.soundDuration] || soundDurations.medium;
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // Pleasant notification tone
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
-    oscillator.frequency.setValueAtTime(1108.73, audioContext.currentTime + 0.1); // C#6
-    oscillator.frequency.setValueAtTime(1318.51, audioContext.currentTime + 0.2); // E6
-
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
+    // Play chimes based on duration setting
+    for (let i = 0; i < config.repeats; i++) {
+      const startTime = audioContext.currentTime + (i * 0.7); // 0.7s gap between chimes
+      playChime(audioContext, startTime, 0.25);
+    }
   } catch (e) {
     console.error('Error playing notification sound:', e);
   }

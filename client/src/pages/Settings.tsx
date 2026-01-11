@@ -69,6 +69,12 @@ function NotificationSettingsCard() {
     saveNotificationSettings(newSettings);
   };
 
+  const handleChangeSoundDuration = (duration: 'short' | 'medium' | 'long') => {
+    const newSettings = { ...settings, soundDuration: duration };
+    setSettings(newSettings);
+    saveNotificationSettings(newSettings);
+  };
+
   const handleTestNotification = async () => {
     setTesting(true);
     await showNotification('Thông báo thử nghiệm', {
@@ -162,27 +168,61 @@ function NotificationSettingsCard() {
                       <p className="text-sm text-gray-500 dark:text-gray-400">Phát chuông khi có thông báo</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleTestSound}
-                      className="px-2 py-1 text-xs text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg"
-                    >
-                      Nghe thử
-                    </button>
-                    <button
-                      onClick={handleToggleSound}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        settings.soundEnabled ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+                  <button
+                    onClick={handleToggleSound}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      settings.soundEnabled ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        settings.soundEnabled ? 'translate-x-6' : 'translate-x-1'
                       }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          settings.soundEnabled ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
+                    />
+                  </button>
                 </div>
+
+                {/* Sound Duration - chỉ hiện khi bật âm thanh */}
+                {settings.soundEnabled && (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        </svg>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">Độ dài chuông</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Chọn thời lượng âm thanh</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleTestSound}
+                        className="px-3 py-1.5 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800"
+                      >
+                        Nghe thử
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: 'short' as const, label: 'Ngắn', desc: '1 tiếng' },
+                        { value: 'medium' as const, label: 'Trung bình', desc: '2 tiếng' },
+                        { value: 'long' as const, label: 'Dài', desc: '3 tiếng' },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => handleChangeSoundDuration(option.value)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            settings.soundDuration === option.value
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Minutes Before */}
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-3">
