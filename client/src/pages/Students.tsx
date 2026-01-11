@@ -442,38 +442,44 @@ export function Students() {
       {/* Filters */}
       <Card>
         <CardBody className="py-3 px-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center justify-between gap-4">
             {/* Filter Selects */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-              <span className="hidden sm:block text-sm text-gray-500 dark:text-gray-400 font-medium">Lọc:</span>
-              <Select
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              <span className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Lọc:
+              </span>
+              <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                options={[
-                  { value: '', label: 'Tất cả loại' },
-                  { value: 'individual', label: 'Cá nhân' },
-                  { value: 'group', label: 'Nhóm' },
-                ]}
-                className="w-auto min-w-[120px]"
-              />
-              <Select
+                className="h-9 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Loại</option>
+                <option value="individual">Cá nhân</option>
+                <option value="group">Nhóm</option>
+              </select>
+              <select
                 value={filterGroup}
                 onChange={(e) => setFilterGroup(e.target.value)}
-                options={[
-                  { value: '', label: 'Tất cả lớp' },
-                  ...groups.map((g) => ({ value: g._id, label: g.name })),
-                ]}
-                className="w-auto min-w-[130px]"
-              />
-              <Select
+                className="h-9 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent max-w-[140px]"
+              >
+                <option value="">Lớp</option>
+                {groups.map((g) => (
+                  <option key={g._id} value={g._id}>{g.name}</option>
+                ))}
+              </select>
+              <select
                 value={filterGrade}
                 onChange={(e) => setFilterGrade(e.target.value)}
-                options={[
-                  { value: '', label: 'Tất cả khối' },
-                  ...availableGrades.map((g) => ({ value: g!.toString(), label: `Khối ${g}` })),
-                ]}
-                className="w-auto min-w-[120px]"
-              />
+                className="h-9 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Khối</option>
+                {availableGrades.map((g) => (
+                  <option key={g} value={g!.toString()}>Khối {g}</option>
+                ))}
+              </select>
               {/* Clear filters button */}
               {(filterType || filterGroup || filterGrade) && (
                 <button
@@ -482,7 +488,7 @@ export function Students() {
                     setFilterGroup('');
                     setFilterGrade('');
                   }}
-                  className="px-2 py-1.5 text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  className="h-9 px-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                   title="Xóa bộ lọc"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -492,21 +498,10 @@ export function Students() {
               )}
             </div>
 
-            {/* Stats - Right aligned on desktop */}
-            <div className="sm:ml-auto flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <span>
-                <span className="font-semibold text-gray-900 dark:text-white">{filteredStudents.length}</span> học sinh
-              </span>
-              {filterType && (
-                <span className="hidden sm:inline">
-                  • {filterType === 'individual' ? 'Cá nhân' : 'Nhóm'}
-                </span>
-              )}
-              {filterGrade && (
-                <span className="hidden sm:inline">
-                  • Khối {filterGrade}
-                </span>
-              )}
+            {/* Stats - Right aligned */}
+            <div className="hidden sm:flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+              <span className="font-semibold text-gray-900 dark:text-white">{filteredStudents.length}</span>
+              <span>học sinh</span>
             </div>
           </div>
         </CardBody>
