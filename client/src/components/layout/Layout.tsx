@@ -3,7 +3,6 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
-import { NetworkStatus } from '../common/NetworkStatus';
 import { PageTransition } from '../common/PageTransition';
 import { PageSkeleton } from '../common/PageLoader';
 import { initSync } from '../../services/syncService';
@@ -49,7 +48,6 @@ export function Layout() {
       </main>
 
       <BottomNav />
-      <NetworkStatus />
     </div>
   );
 }

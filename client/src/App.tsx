@@ -21,52 +21,6 @@ const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.S
 const Users = lazy(() => import('./pages/Users').then(m => ({ default: m.Users })));
 const StudentPortal = lazy(() => import('./pages/StudentPortal').then(m => ({ default: m.StudentPortal })));
 
-// Network status indicator component - shows online/offline status as a floating badge
-function NetworkStatusIndicator() {
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [showTooltip, setShowTooltip] = useState(false);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  return (
-    <div
-      className="fixed bottom-4 right-4 z-[9999]"
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
-    >
-      {/* Tooltip */}
-      {showTooltip && (
-        <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg whitespace-nowrap">
-          {isOffline ? 'Đang offline - Sử dụng dữ liệu đã lưu' : 'Đang online'}
-          <div className="absolute top-full right-4 border-4 border-transparent border-t-gray-900" />
-        </div>
-      )}
-      {/* Status Badge */}
-      <button
-        className={`flex items-center gap-2 px-3 py-2 rounded-full shadow-lg transition-all duration-300 ${
-          isOffline
-            ? 'bg-amber-500 text-white hover:bg-amber-600'
-            : 'bg-green-500 text-white hover:bg-green-600'
-        }`}
-      >
-        <span className={`w-2 h-2 rounded-full ${isOffline ? 'bg-white animate-pulse' : 'bg-white'}`} />
-        <span className="text-xs font-medium">{isOffline ? 'Offline' : 'Online'}</span>
-      </button>
-    </div>
-  );
-}
-
 // Offline Users Page - shown when trying to access users page while offline
 function OfflineUsersPage() {
   return (
@@ -113,7 +67,6 @@ function UsersPageWrapper() {
 function App() {
   return (
     <BrowserRouter>
-      <NetworkStatusIndicator />
       <Toaster position="top-right" />
       <Suspense fallback={<PageLoader />}>
         <Routes>
