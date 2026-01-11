@@ -509,42 +509,57 @@ export function Groups() {
               </div>
             )}
 
-            <div className="flex flex-wrap gap-2 items-end">
-              <Select
-                value={newSchedule.dayOfWeek}
-                onChange={(e) => setNewSchedule({ ...newSchedule, dayOfWeek: e.target.value })}
-                options={dayNames.map((d, i) => ({ value: i.toString(), label: d.replace('Thứ ', 'T').replace('Chủ nhật', 'CN') }))}
-                className="w-16"
-              />
-              <div className="flex items-center gap-1">
-                <input
-                  type="time"
-                  value={newSchedule.startTime}
-                  onChange={(e) => setNewSchedule({ ...newSchedule, startTime: e.target.value })}
-                  className="w-20 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-                <span className="text-gray-400">-</span>
-                <input
-                  type="time"
-                  value={newSchedule.endTime}
-                  onChange={(e) => setNewSchedule({ ...newSchedule, endTime: e.target.value })}
-                  className="w-20 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            {/* Add schedule row - responsive layout */}
+            <div className="grid grid-cols-12 gap-2 items-end">
+              {/* Day of week */}
+              <div className="col-span-3 sm:col-span-2">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Thứ</label>
+                <Select
+                  value={newSchedule.dayOfWeek}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, dayOfWeek: e.target.value })}
+                  options={dayNames.map((d, i) => ({ value: i.toString(), label: d.replace('Thứ ', 'T').replace('Chủ nhật', 'CN') }))}
                 />
               </div>
-              <Select
-                value={newSchedule.subject}
-                onChange={(e) => setNewSchedule({ ...newSchedule, subject: e.target.value })}
-                options={[
-                  { value: '', label: 'Chọn môn' },
-                  ...(settings?.subjects || []).map((s) => ({ value: s, label: s })),
-                ]}
-                className="flex-1 min-w-[80px]"
-              />
-              <Button type="button" variant="secondary" size="sm" onClick={addSchedule} className="flex-shrink-0">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </Button>
+              {/* Time range */}
+              <div className="col-span-5 sm:col-span-4">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Thời gian</label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="time"
+                    value={newSchedule.startTime}
+                    onChange={(e) => setNewSchedule({ ...newSchedule, startTime: e.target.value })}
+                    className="flex-1 min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-400 flex-shrink-0">→</span>
+                  <input
+                    type="time"
+                    value={newSchedule.endTime}
+                    onChange={(e) => setNewSchedule({ ...newSchedule, endTime: e.target.value })}
+                    className="flex-1 min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              {/* Subject */}
+              <div className="col-span-4 sm:col-span-5">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Môn học</label>
+                <Select
+                  value={newSchedule.subject}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, subject: e.target.value })}
+                  options={[
+                    { value: '', label: 'Chọn môn' },
+                    ...(settings?.subjects || []).map((s) => ({ value: s, label: s })),
+                  ]}
+                />
+              </div>
+              {/* Add button */}
+              <div className="col-span-12 sm:col-span-1 flex justify-end sm:justify-center">
+                <Button type="button" variant="secondary" size="sm" onClick={addSchedule} className="w-full sm:w-auto">
+                  <svg className="w-4 h-4 sm:mr-0 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="sm:hidden">Thêm lịch</span>
+                </Button>
+              </div>
             </div>
           </div>
 
