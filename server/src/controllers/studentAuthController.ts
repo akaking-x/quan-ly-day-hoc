@@ -98,6 +98,7 @@ export const getStudentInfo = async (req: Request, res: Response) => {
 export const getStudentSessions = async (req: Request, res: Response) => {
   try {
     const studentId = (req as any).studentId;
+    const { year, month } = req.query;
 
     const student = await Student.findById(studentId);
     if (!student || !student.active) {
@@ -118,13 +119,21 @@ export const getStudentSessions = async (req: Request, res: Response) => {
       query.$or.push({ groupId: student.groupId });
     }
 
-    // Get upcoming and recent sessions (past 30 days to future)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Lọc theo tháng/năm nếu có, ngược lại lấy 30 ngày gần đây và tương lai
+    let dateFilter: any;
+    if (year && month) {
+      const startDate = new Date(Number(year), Number(month) - 1, 1);
+      const endDate = new Date(Number(year), Number(month), 0, 23, 59, 59);
+      dateFilter = { $gte: startDate, $lte: endDate };
+    } else {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      dateFilter = { $gte: thirtyDaysAgo };
+    }
 
     const sessions = await Session.find({
       ...query,
-      date: { $gte: thirtyDaysAgo },
+      date: dateFilter,
     })
       .populate('groupId')
       .populate({
@@ -213,6 +222,7 @@ export const getUpcomingSession = async (req: Request, res: Response) => {
 export const getStudentBalance = async (req: Request, res: Response) => {
   try {
     const studentId = (req as any).studentId;
+    const { year, month } = req.query;
 
     const student = await Student.findById(studentId);
     if (!student || !student.active) {
@@ -222,7 +232,7 @@ export const getStudentBalance = async (req: Request, res: Response) => {
       });
     }
 
-    // Get sessions where this student attended (status = 'present' or 'late')
+    // Get sessions where this student attended
     const query: any = {
       $or: [{ studentIds: studentId }],
       'attendance.studentId': studentId,
@@ -232,34 +242,51 @@ export const getStudentBalance = async (req: Request, res: Response) => {
       query.$or.push({ groupId: student.groupId });
     }
 
+    // Lọc theo tháng/năm nếu có
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+    if (year && month) {
+      startDate = new Date(Number(year), Number(month) - 1, 1);
+      endDate = new Date(Number(year), Number(month), 0, 23, 59, 59);
+      query.date = { $gte: startDate, $lte: endDate };
+    }
+
     const sessions = await Session.find(query);
 
-    // Calculate total sessions where student was present or late
+    // Calculate total sessions where student needs to pay
+    // Logic: present, late, absent (vắng không phép) = thu tiền
+    //        excused (vắng có phép) = không thu tiền
     let attendedSessions = 0;
+    let totalFee = 0;
     sessions.forEach((session) => {
       const attendance = session.attendance.find(
-        (a) => a.studentId.toString() === studentId.toString()
+        (a) => a.studentId.toString() === studentId.toString() && a.status !== 'excused'
       );
-      if (attendance && (attendance.status === 'present' || attendance.status === 'late')) {
+      if (attendance) {
         attendedSessions++;
+        // Dùng học phí đã lưu trong attendance, nếu không có thì dùng học phí hiện tại
+        const fee = (attendance as any).feePerSession ?? student.feePerSession;
+        totalFee += fee;
       }
     });
 
-    // Calculate total fee
-    const totalFee = attendedSessions * student.feePerSession;
-
-    // Get total payments
-    const payments = await Payment.find({ studentId });
+    // Get payments (lọc theo tháng/năm nếu có)
+    let paymentQuery: any = { studentId };
+    if (startDate && endDate) {
+      paymentQuery.$or = [
+        { paymentDate: { $gte: startDate, $lte: endDate } },
+        { periodStart: { $lte: endDate }, periodEnd: { $gte: startDate } },
+      ];
+    }
+    const payments = await Payment.find(paymentQuery).sort({ paymentDate: -1 });
     const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
 
     // Calculate balance
     const balance = totalFee - totalPaid;
     const status = balance > 0 ? 'debt' : balance < 0 ? 'credit' : 'paid';
 
-    // Get recent payments
-    const recentPayments = await Payment.find({ studentId })
-      .sort({ paymentDate: -1 })
-      .limit(5);
+    // Get recent payments (trong tháng nếu có filter, hoặc 5 cái gần nhất)
+    const recentPayments = year && month ? payments : payments.slice(0, 5);
 
     res.json({
       success: true,

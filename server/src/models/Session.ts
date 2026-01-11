@@ -6,6 +6,7 @@ export interface IAttendance {
   studentId: mongoose.Types.ObjectId;
   status: AttendanceStatus;
   note?: string;
+  feePerSession?: number; // Học phí tại thời điểm điểm danh
 }
 
 export interface ISession extends Document {
@@ -30,6 +31,7 @@ const attendanceSchema = new Schema<IAttendance>(
     studentId: { type: Schema.Types.ObjectId, ref: 'Student', required: true },
     status: { type: String, enum: ['present', 'absent', 'late', 'excused'], default: 'present' },
     note: { type: String },
+    feePerSession: { type: Number }, // Học phí tại thời điểm điểm danh
   },
   { _id: false }
 );

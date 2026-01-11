@@ -4,6 +4,11 @@ import { studentPortalApiService } from '../services/api';
 import { useStudentPortalStore } from '../stores/studentPortalStore';
 import { useThemeStore, applyTheme } from '../store/themeStore';
 import type { StudentPortalSession, StudentBalanceInfo } from '../types';
+import {
+  initializeNotifications,
+  getNotificationSettings,
+  ScheduledSession,
+} from '../services/notificationService';
 
 export const StudentPortal = () => {
   const { student, isAuthenticated, login, logout } = useStudentPortalStore();
@@ -14,6 +19,12 @@ export const StudentPortal = () => {
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [balance, setBalance] = useState<StudentBalanceInfo | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+
+  // State cho bộ lọc tháng/năm
+  const currentDate = new Date();
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
+  const [filterMode, setFilterMode] = useState<'recent' | 'month'>('recent'); // 'recent' = 30 ngày gần đây, 'month' = theo tháng
 
   // Apply theme on mount and when theme changes
   useEffect(() => {
@@ -32,14 +43,36 @@ export const StudentPortal = () => {
       loadSessions();
       loadBalance();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, filterMode, selectedYear, selectedMonth]);
 
   const loadSessions = async () => {
     setLoadingSessions(true);
     try {
-      const result = await studentPortalApiService.getSessions();
+      const params = filterMode === 'month' ? { year: selectedYear, month: selectedMonth } : undefined;
+      const result = await studentPortalApiService.getSessions(params);
       if (result.success && result.data) {
         setSessions(result.data);
+
+        // Schedule notifications for upcoming sessions (only in 'recent' mode)
+        if (filterMode === 'recent') {
+          const settings = getNotificationSettings();
+          if (settings.enabled) {
+            const scheduledSessions: ScheduledSession[] = result.data
+              .filter((s) => {
+                const sessionDate = new Date(s.date);
+                const now = new Date();
+                return sessionDate >= now;
+              })
+              .map((s) => ({
+                id: s._id,
+                date: s.date,
+                startTime: s.startTime,
+                subject: s.subject,
+                groupName: s.groupId?.name,
+              }));
+            initializeNotifications(scheduledSessions);
+          }
+        }
       }
     } catch {
       toast.error('Không thể tải lịch học');
@@ -51,7 +84,8 @@ export const StudentPortal = () => {
   const loadBalance = async () => {
     setLoadingBalance(true);
     try {
-      const result = await studentPortalApiService.getBalance();
+      const params = filterMode === 'month' ? { year: selectedYear, month: selectedMonth } : undefined;
+      const result = await studentPortalApiService.getBalance(params);
       if (result.success && result.data) {
         setBalance(result.data);
       }
@@ -467,24 +501,77 @@ export const StudentPortal = () => {
           </div>
         )}
 
-        {/* Section Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Lịch học của bạn</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-              30 ngày gần đây và sắp tới
-            </p>
+        {/* Section Header with Filter */}
+        <div className="mb-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Lịch học của bạn</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                {filterMode === 'recent' ? '30 ngày gần đây và sắp tới' : `Tháng ${selectedMonth}/${selectedYear}`}
+              </p>
+            </div>
+            <button
+              onClick={loadSessions}
+              disabled={loadingSessions}
+              className="px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <svg className={`w-4 h-4 ${loadingSessions ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Làm mới
+            </button>
           </div>
-          <button
-            onClick={loadSessions}
-            disabled={loadingSessions}
-            className="px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors flex items-center gap-2"
-          >
-            <svg className={`w-4 h-4 ${loadingSessions ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Làm mới
-          </button>
+
+          {/* Filter Controls */}
+          <div className="flex flex-wrap items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+            {/* Filter Mode Toggle */}
+            <div className="flex rounded-lg bg-slate-100 dark:bg-slate-700 p-1">
+              <button
+                onClick={() => setFilterMode('recent')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  filterMode === 'recent'
+                    ? 'bg-white dark:bg-slate-600 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                Gần đây
+              </button>
+              <button
+                onClick={() => setFilterMode('month')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  filterMode === 'month'
+                    ? 'bg-white dark:bg-slate-600 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                Theo tháng
+              </button>
+            </div>
+
+            {/* Month/Year Selectors - Only show when filterMode is 'month' */}
+            {filterMode === 'month' && (
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent"
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
+                  ))}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent"
+                >
+                  {Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i).map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Sessions List */}

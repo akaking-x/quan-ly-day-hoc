@@ -248,12 +248,12 @@ export const studentPortalApiService = {
     studentPortalApi.post<ApiResponse<StudentLoginResponse>>('/login', { studentCode }).then((r) => r.data),
   getMe: () =>
     studentPortalApi.get<ApiResponse<StudentPortalInfo>>('/me').then((r) => r.data),
-  getSessions: () =>
-    studentPortalApi.get<ApiResponse<StudentPortalSession[]>>('/sessions').then((r) => r.data),
+  getSessions: (params?: { year?: number; month?: number }) =>
+    studentPortalApi.get<ApiResponse<StudentPortalSession[]>>('/sessions', { params }).then((r) => r.data),
   getUpcoming: () =>
     studentPortalApi.get<ApiResponse<Session>>('/upcoming').then((r) => r.data),
-  getBalance: () =>
-    studentPortalApi.get<ApiResponse<StudentBalanceInfo>>('/balance').then((r) => r.data),
+  getBalance: (params?: { year?: number; month?: number }) =>
+    studentPortalApi.get<ApiResponse<StudentBalanceInfo>>('/balance', { params }).then((r) => r.data),
 };
 
 export interface DatabaseInfo {

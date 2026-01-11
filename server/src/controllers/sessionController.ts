@@ -86,9 +86,22 @@ export const deleteSession = async (req: AuthRequest, res: Response) => {
 export const updateAttendance = async (req: AuthRequest, res: Response) => {
   try {
     const { attendance } = req.body;
+
+    // Lấy học phí của các học sinh để lưu vào attendance
+    const studentIds = attendance.map((a: { studentId: string }) => a.studentId);
+    const students = await Student.find({ _id: { $in: studentIds } });
+    const studentFeeMap = new Map(students.map((s) => [s._id.toString(), s.feePerSession]));
+
+    // Thêm feePerSession vào mỗi attendance record
+    const attendanceWithFee = attendance.map((a: { studentId: string; status: string; note?: string; feePerSession?: number }) => ({
+      ...a,
+      // Nếu client đã gửi feePerSession thì giữ nguyên, nếu không thì lấy từ student
+      feePerSession: a.feePerSession ?? studentFeeMap.get(a.studentId.toString()) ?? 0,
+    }));
+
     const session = await Session.findOneAndUpdate(
       { _id: req.params.id, userId: req.user?._id },
-      { attendance },
+      { attendance: attendanceWithFee },
       { new: true, runValidators: true }
     )
       .populate('groupId')
@@ -131,6 +144,8 @@ export const generateSessions = async (req: AuthRequest, res: Response) => {
 
     const students = await Student.find({ userId: req.user?._id, groupId, active: true });
     const studentIds = students.map((s) => s._id);
+    // Tạo map học phí để lưu vào attendance
+    const studentFeeMap = new Map(students.map((s) => [s._id.toString(), s.feePerSession]));
 
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -160,7 +175,11 @@ export const generateSessions = async (req: AuthRequest, res: Response) => {
             studentIds,
             type: 'scheduled',
             subject: scheduleItem.subject,
-            attendance: studentIds.map((id) => ({ studentId: id, status: 'present' })),
+            attendance: studentIds.map((id) => ({
+              studentId: id,
+              status: 'present',
+              feePerSession: studentFeeMap.get(id.toString()) ?? 0,
+            })),
           });
           await session.save();
           createdSessions.push(session);
@@ -202,6 +221,11 @@ export const duplicateWeekSessions = async (req: AuthRequest, res: Response) => 
       return res.status(400).json({ success: false, error: 'No sessions found in the selected week' });
     }
 
+    // Lấy tất cả học sinh để có học phí hiện tại
+    const allStudentIds = [...new Set(sourceSessions.flatMap((s) => s.studentIds.map((id) => id.toString())))];
+    const students = await Student.find({ _id: { $in: allStudentIds } });
+    const studentFeeMap = new Map(students.map((s) => [s._id.toString(), s.feePerSession]));
+
     const createdSessions = [];
 
     // Duplicate to each subsequent week
@@ -237,6 +261,7 @@ export const duplicateWeekSessions = async (req: AuthRequest, res: Response) => 
             attendance: sourceSession.attendance.map((a) => ({
               studentId: a.studentId,
               status: 'present', // Default to present for new sessions
+              feePerSession: studentFeeMap.get(a.studentId.toString()) ?? 0,
             })),
             notes: sourceSession.notes,
           });

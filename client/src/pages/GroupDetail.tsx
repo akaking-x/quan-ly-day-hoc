@@ -20,6 +20,7 @@ export function GroupDetail() {
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [filterGrade, setFilterGrade] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -67,9 +68,18 @@ export function GroupDetail() {
     }
   };
 
+  // Students not in this group
   const availableStudents = allStudents.filter(
     (s) => !students.some((gs) => gs._id === s._id)
   );
+
+  // Get unique grades from available students
+  const availableGrades = [...new Set(availableStudents.map(s => s.grade).filter(Boolean))].sort((a, b) => (a || 0) - (b || 0));
+
+  // Filter by grade if selected
+  const filteredAvailableStudents = filterGrade
+    ? availableStudents.filter(s => s.grade === parseInt(filterGrade))
+    : availableStudents;
 
   if (loading || !group) {
     return <PageLoading />;
@@ -171,22 +181,42 @@ export function GroupDetail() {
 
       <Modal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setFilterGrade('');
+          setSelectedStudentId('');
+        }}
         title="Thêm học sinh vào nhóm"
         size="md"
       >
         <div className="space-y-4">
           <Select
+            label="Lọc theo khối"
+            value={filterGrade}
+            onChange={(e) => {
+              setFilterGrade(e.target.value);
+              setSelectedStudentId('');
+            }}
+            options={[
+              { value: '', label: 'Tất cả khối' },
+              ...availableGrades.map((g) => ({ value: g!.toString(), label: `Khối ${g}` })),
+            ]}
+          />
+          <Select
             label="Chọn học sinh"
             value={selectedStudentId}
             onChange={(e) => setSelectedStudentId(e.target.value)}
             options={[
-              { value: '', label: 'Chọn học sinh' },
-              ...availableStudents.map((s) => ({ value: s._id, label: s.name })),
+              { value: '', label: `Chọn học sinh${filteredAvailableStudents.length > 0 ? ` (${filteredAvailableStudents.length})` : ''}` },
+              ...filteredAvailableStudents.map((s) => ({ value: s._id, label: `${s.name}${s.grade ? ` - Khối ${s.grade}` : ''}` })),
             ]}
           />
           <div className="flex gap-3 justify-end">
-            <Button variant="secondary" onClick={() => setIsAddModalOpen(false)}>
+            <Button variant="secondary" onClick={() => {
+              setIsAddModalOpen(false);
+              setFilterGrade('');
+              setSelectedStudentId('');
+            }}>
               Hủy
             </Button>
             <Button onClick={addStudent} disabled={!selectedStudentId}>

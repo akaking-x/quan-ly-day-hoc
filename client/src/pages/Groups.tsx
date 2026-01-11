@@ -509,43 +509,41 @@ export function Groups() {
               </div>
             )}
 
-            {/* Add schedule form - 2 rows layout */}
+            {/* Add schedule form - 3 rows layout for desktop */}
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 space-y-4">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Thêm lịch mới</p>
 
-              {/* Row 1: Day and Time */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Day of week */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Thứ trong tuần</label>
-                  <Select
-                    value={newSchedule.dayOfWeek}
-                    onChange={(e) => setNewSchedule({ ...newSchedule, dayOfWeek: e.target.value })}
-                    options={dayNames.map((d, i) => ({ value: i.toString(), label: d }))}
+              {/* Row 1: Day of week */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Thứ trong tuần</label>
+                <Select
+                  value={newSchedule.dayOfWeek}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, dayOfWeek: e.target.value })}
+                  options={dayNames.map((d, i) => ({ value: i.toString(), label: d }))}
+                />
+              </div>
+
+              {/* Row 2: Time range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Thời gian học</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="time"
+                    value={newSchedule.startTime}
+                    onChange={(e) => setNewSchedule({ ...newSchedule, startTime: e.target.value })}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                </div>
-                {/* Time range */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Thời gian học</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="time"
-                      value={newSchedule.startTime}
-                      onChange={(e) => setNewSchedule({ ...newSchedule, startTime: e.target.value })}
-                      className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <span className="text-gray-400 dark:text-gray-500 font-medium">đến</span>
-                    <input
-                      type="time"
-                      value={newSchedule.endTime}
-                      onChange={(e) => setNewSchedule({ ...newSchedule, endTime: e.target.value })}
-                      className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  <span className="text-gray-400 dark:text-gray-500 font-medium">đến</span>
+                  <input
+                    type="time"
+                    value={newSchedule.endTime}
+                    onChange={(e) => setNewSchedule({ ...newSchedule, endTime: e.target.value })}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
                 </div>
               </div>
 
-              {/* Row 2: Subject and Add button */}
+              {/* Row 3: Subject and Add button */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                 {/* Subject */}
                 <div className="sm:col-span-2">

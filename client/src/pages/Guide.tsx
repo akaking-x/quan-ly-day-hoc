@@ -447,6 +447,72 @@ const guideContent: Record<Language, GuideContent> = {
         ),
       },
       {
+        id: 'notifications',
+        title: 'Thông báo trước giờ học',
+        icon: (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+        ),
+        content: (
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+              <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">Giới thiệu</h4>
+              <p className="text-blue-700 dark:text-blue-400 text-sm">
+                Tính năng thông báo giúp học sinh được nhắc nhở trước mỗi buổi học. Hỗ trợ cả thông báo và âm thanh, có thể tùy chỉnh thời gian nhắc.
+              </p>
+            </div>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white">Bật thông báo</h4>
+            <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300">
+              <li>Đăng nhập vào <span className="font-medium text-emerald-600">Cổng học sinh</span></li>
+              <li>Nhấn vào biểu tượng <span className="font-medium">⚙️ Cài đặt</span> ở góc trên bên phải</li>
+              <li>Tìm phần <span className="font-medium text-blue-600">"Thông báo"</span></li>
+              <li>Bật công tắc <span className="font-medium">"Bật thông báo"</span></li>
+              <li>Cho phép quyền thông báo khi trình duyệt yêu cầu</li>
+            </ol>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white mt-6">Tùy chỉnh cài đặt</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
+                <p className="font-medium text-purple-800 dark:text-purple-300 text-sm">Thời gian nhắc</p>
+                <p className="text-purple-700 dark:text-purple-400 text-xs mt-1">5, 10, 15, hoặc 30 phút trước giờ học</p>
+              </div>
+              <div className="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-xl">
+                <p className="font-medium text-orange-800 dark:text-orange-300 text-sm">Âm thanh</p>
+                <p className="text-orange-700 dark:text-orange-400 text-xs mt-1">Bật/tắt chuông nhắc nhở</p>
+              </div>
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl">
+                <p className="font-medium text-green-800 dark:text-green-300 text-sm">Test thông báo</p>
+                <p className="text-green-700 dark:text-green-400 text-xs mt-1">Nhấn nút để thử thông báo mẫu</p>
+              </div>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+                <p className="font-medium text-blue-800 dark:text-blue-300 text-sm">Test âm thanh</p>
+                <p className="text-blue-700 dark:text-blue-400 text-xs mt-1">Nhấn nút để nghe chuông mẫu</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl mt-4">
+              <h4 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Lưu ý cho iPhone/iPad</h4>
+              <ul className="text-yellow-700 dark:text-yellow-400 text-sm space-y-1">
+                <li>• Trên iOS, bạn cần <span className="font-medium">thêm ứng dụng vào màn hình chính</span> để nhận thông báo</li>
+                <li>• Mở Safari → Nhấn nút Chia sẻ → Chọn "Thêm vào màn hình chính"</li>
+                <li>• Mở ứng dụng từ màn hình chính và bật thông báo</li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-red-50 dark:bg-red-900/30 rounded-xl">
+              <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">Khắc phục sự cố</h4>
+              <ul className="text-red-700 dark:text-red-400 text-sm space-y-1">
+                <li>• <span className="font-medium">Không nhận được thông báo?</span> Kiểm tra quyền thông báo trong cài đặt trình duyệt</li>
+                <li>• <span className="font-medium">Âm thanh không kêu?</span> Kiểm tra âm lượng thiết bị và tắt chế độ im lặng</li>
+                <li>• <span className="font-medium">Cần giữ ứng dụng mở?</span> Không cần, thông báo sẽ hoạt động ngay cả khi đóng tab (trên Android/Desktop)</li>
+              </ul>
+            </div>
+          </div>
+        ),
+      },
+      {
         id: 'tips',
         title: 'Mẹo sử dụng',
         icon: (
@@ -963,6 +1029,72 @@ const guideContent: Record<Language, GuideContent> = {
                 <li>• If there are pending changes, the icon turns yellow</li>
                 <li>• Click the icon to manually sync when online</li>
                 <li>• Recommended to download offline data regularly for latest data</li>
+              </ul>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'notifications',
+        title: 'Class Reminders',
+        icon: (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+        ),
+        content: (
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+              <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">Introduction</h4>
+              <p className="text-blue-700 dark:text-blue-400 text-sm">
+                The notification feature helps students get reminders before each class. Supports both notifications and sounds, with customizable reminder times.
+              </p>
+            </div>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white">Enable Notifications</h4>
+            <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300">
+              <li>Log in to <span className="font-medium text-emerald-600">Student Portal</span></li>
+              <li>Click on the <span className="font-medium">⚙️ Settings</span> icon in the top right corner</li>
+              <li>Find the <span className="font-medium text-blue-600">"Notifications"</span> section</li>
+              <li>Toggle <span className="font-medium">"Enable Notifications"</span> on</li>
+              <li>Allow notification permission when browser prompts</li>
+            </ol>
+
+            <h4 className="font-semibold text-gray-900 dark:text-white mt-6">Customize Settings</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
+                <p className="font-medium text-purple-800 dark:text-purple-300 text-sm">Reminder Time</p>
+                <p className="text-purple-700 dark:text-purple-400 text-xs mt-1">5, 10, 15, or 30 minutes before class</p>
+              </div>
+              <div className="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-xl">
+                <p className="font-medium text-orange-800 dark:text-orange-300 text-sm">Sound</p>
+                <p className="text-orange-700 dark:text-orange-400 text-xs mt-1">Enable/disable reminder sound</p>
+              </div>
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl">
+                <p className="font-medium text-green-800 dark:text-green-300 text-sm">Test Notification</p>
+                <p className="text-green-700 dark:text-green-400 text-xs mt-1">Click button to try sample notification</p>
+              </div>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+                <p className="font-medium text-blue-800 dark:text-blue-300 text-sm">Test Sound</p>
+                <p className="text-blue-700 dark:text-blue-400 text-xs mt-1">Click button to hear sample sound</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl mt-4">
+              <h4 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Note for iPhone/iPad</h4>
+              <ul className="text-yellow-700 dark:text-yellow-400 text-sm space-y-1">
+                <li>• On iOS, you need to <span className="font-medium">add the app to home screen</span> to receive notifications</li>
+                <li>• Open Safari → Tap Share button → Select "Add to Home Screen"</li>
+                <li>• Open the app from home screen and enable notifications</li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-red-50 dark:bg-red-900/30 rounded-xl">
+              <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">Troubleshooting</h4>
+              <ul className="text-red-700 dark:text-red-400 text-sm space-y-1">
+                <li>• <span className="font-medium">Not receiving notifications?</span> Check notification permissions in browser settings</li>
+                <li>• <span className="font-medium">Sound not playing?</span> Check device volume and silent mode</li>
+                <li>• <span className="font-medium">Need to keep app open?</span> No, notifications work even with closed tabs (on Android/Desktop)</li>
               </ul>
             </div>
           </div>

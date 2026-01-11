@@ -35,19 +35,23 @@ export const calculateFee = async (
   });
 
   let attendedCount = 0;
+  let totalFee = 0;
   sessions.forEach((session) => {
     const attendance = session.attendance.find(
       (a) => a.studentId.toString() === studentId && a.status !== 'excused'
     );
     if (attendance) {
       attendedCount++;
+      // Dùng học phí đã lưu trong attendance, nếu không có thì dùng học phí hiện tại
+      const fee = attendance.feePerSession ?? student.feePerSession;
+      totalFee += fee;
     }
   });
 
   return {
     sessions: attendedCount,
     feePerSession: student.feePerSession,
-    totalFee: attendedCount * student.feePerSession,
+    totalFee,
   };
 };
 
@@ -63,16 +67,18 @@ export const calculateBalance = async (studentId: string, userId: string): Promi
   });
 
   let totalSessions = 0;
+  let totalFee = 0;
   sessions.forEach((session) => {
     const attendance = session.attendance.find(
       (a) => a.studentId.toString() === studentId && a.status !== 'excused'
     );
     if (attendance) {
       totalSessions++;
+      // Dùng học phí đã lưu trong attendance, nếu không có thì dùng học phí hiện tại
+      const fee = attendance.feePerSession ?? student.feePerSession;
+      totalFee += fee;
     }
   });
-
-  const totalFee = totalSessions * student.feePerSession;
 
   const payments = await Payment.find({
     userId: new mongoose.Types.ObjectId(userId),

@@ -41,6 +41,11 @@ export function StudentDetail() {
   const [selectedStatus, setSelectedStatus] = useState<StudentStatus | ''>('');
   const [savingNotes, setSavingNotes] = useState(false);
 
+  // State cho bộ lọc tháng/năm
+  const currentDate = new Date();
+  const [filterYear, setFilterYear] = useState(currentDate.getFullYear());
+  const [filterMonth, setFilterMonth] = useState(currentDate.getMonth() + 1);
+
   useEffect(() => {
     if (!id) return;
     loadData();
@@ -107,6 +112,21 @@ export function StudentDetail() {
   const insertChecklist = (template: string) => {
     setNotesContent(prev => prev + (prev ? '\n' : '') + template);
   };
+
+  // Lọc sessions theo tháng/năm
+  const filteredSessions = sessions.filter((session) => {
+    const sessionDate = new Date(session.date);
+    return sessionDate.getFullYear() === filterYear && sessionDate.getMonth() + 1 === filterMonth;
+  });
+
+  // Lọc payments theo tháng/năm
+  const filteredPayments = payments.filter((payment) => {
+    const paymentDate = new Date(payment.paymentDate);
+    return paymentDate.getFullYear() === filterYear && paymentDate.getMonth() + 1 === filterMonth;
+  });
+
+  // Tạo danh sách năm để chọn (5 năm gần đây)
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i);
 
   if (loading || !student) {
     return <PageLoading />;
@@ -393,12 +413,40 @@ export function StudentDetail() {
 
       {activeTab === 'sessions' && (
         <Card>
-          <CardBody>
-            {sessions.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">Chưa có lịch sử điểm danh</p>
+          <CardBody className="space-y-4">
+            {/* Bộ lọc tháng/năm */}
+            <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Lọc theo:</span>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(Number(e.target.value))}
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
+                ))}
+              </select>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(Number(e.target.value))}
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+              >
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                ({filteredSessions.length} buổi)
+              </span>
+            </div>
+
+            {filteredSessions.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                Không có lịch sử điểm danh trong tháng {filterMonth}/{filterYear}
+              </p>
             ) : (
               <div className="space-y-3">
-                {sessions.map((session) => {
+                {filteredSessions.map((session) => {
                   const attendance = session.attendance.find(
                     (a) => (typeof a.studentId === 'string' ? a.studentId : a.studentId._id) === id
                   );
@@ -436,12 +484,40 @@ export function StudentDetail() {
 
       {activeTab === 'payments' && (
         <Card>
-          <CardBody>
-            {payments.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">Chưa có lịch sử thanh toán</p>
+          <CardBody className="space-y-4">
+            {/* Bộ lọc tháng/năm */}
+            <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Lọc theo:</span>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(Number(e.target.value))}
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
+                ))}
+              </select>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(Number(e.target.value))}
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+              >
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                ({filteredPayments.length} thanh toán • {formatCurrency(filteredPayments.reduce((sum, p) => sum + p.amount, 0))} VNĐ)
+              </span>
+            </div>
+
+            {filteredPayments.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                Không có thanh toán trong tháng {filterMonth}/{filterYear}
+              </p>
             ) : (
               <div className="space-y-3">
-                {payments.map((payment) => (
+                {filteredPayments.map((payment) => (
                   <div key={payment._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div>
                       <p className="font-medium text-green-600">+{formatCurrency(payment.amount)} VNĐ</p>
