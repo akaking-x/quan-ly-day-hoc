@@ -1,5 +1,6 @@
-const CACHE_NAME = 'qldh-cache-v3';
-const STATIC_CACHE = 'qldh-static-v3';
+const CACHE_NAME = 'qldh-cache-v4';
+const STATIC_CACHE = 'qldh-static-v4';
+const DYNAMIC_CACHE = 'qldh-dynamic-v4';
 
 const STATIC_ASSETS = [
   '/',
@@ -31,7 +32,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE) {
+          if (![CACHE_NAME, STATIC_CACHE, DYNAMIC_CACHE].includes(cacheName)) {
             return caches.delete(cacheName);
           }
         })
@@ -39,6 +40,17 @@ self.addEventListener('activate', (event) => {
     }).then(() => self.clients.claim())
   );
 });
+
+// Helper: Check if request is a navigation request
+const isNavigationRequest = (request) => {
+  return request.mode === 'navigate' ||
+    (request.method === 'GET' && request.headers.get('accept')?.includes('text/html'));
+};
+
+// Helper: Check if request is for static assets (JS, CSS, images)
+const isStaticAsset = (url) => {
+  return url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/);
+};
 
 // Fetch strategy
 self.addEventListener('fetch', (event) => {
@@ -48,44 +60,97 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // API requests: Network only (handled by IndexedDB in app)
+  // Skip chrome-extension and other non-http(s) requests
+  if (!url.protocol.startsWith('http')) return;
+
+  // API requests: Network only with offline fallback
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request).catch(() => {
         return new Response(
-          JSON.stringify({ success: false, error: 'Offline' }),
-          { headers: { 'Content-Type': 'application/json' } }
+          JSON.stringify({ success: false, error: 'Offline - Đang sử dụng dữ liệu đã lưu' }),
+          {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+          }
         );
       })
     );
     return;
   }
 
-  // Static assets: Cache first, then network
-  if (STATIC_ASSETS.includes(url.pathname) || url.pathname.startsWith('/icons/')) {
+  // Navigation requests: Return cached index.html for SPA routing
+  if (isNavigationRequest(request)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Cache the new version
+          const clone = response.clone();
+          caches.open(STATIC_CACHE).then((cache) => cache.put('/', clone));
+          return response;
+        })
+        .catch(() => {
+          // Return cached index.html for offline
+          return caches.match('/') || caches.match('/index.html');
+        })
+    );
+    return;
+  }
+
+  // Static assets (JS, CSS, images): Cache-first with network fallback
+  if (isStaticAsset(url)) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request).then((response) => {
-          const clone = response.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone));
-          return response;
-        });
+        if (cached) {
+          // Return cached, but also update in background
+          fetch(request).then((response) => {
+            if (response.ok) {
+              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, response));
+            }
+          }).catch(() => {});
+          return cached;
+        }
+
+        // Not in cache, try network
+        return fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              const clone = response.clone();
+              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+          .catch(() => {
+            // Return a fallback for failed JS/CSS loads
+            if (url.pathname.endsWith('.js')) {
+              return new Response('console.warn("Offline: Script not available");', {
+                headers: { 'Content-Type': 'application/javascript' }
+              });
+            }
+            if (url.pathname.endsWith('.css')) {
+              return new Response('/* Offline: Styles not available */', {
+                headers: { 'Content-Type': 'text/css' }
+              });
+            }
+            return new Response('Offline', { status: 503 });
+          });
       })
     );
     return;
   }
 
-  // Other assets (JS, CSS): Stale-while-revalidate
+  // Other requests: Stale-while-revalidate
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(request).then((cached) => {
-        const fetchPromise = fetch(request).then((response) => {
-          if (response.ok) {
-            cache.put(request, response.clone());
-          }
-          return response;
-        }).catch(() => cached);
+        const fetchPromise = fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              cache.put(request, response.clone());
+            }
+            return response;
+          })
+          .catch(() => cached);
 
         return cached || fetchPromise;
       });
@@ -106,7 +171,7 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// Push notification (for future use)
+// Push notification
 self.addEventListener('push', (event) => {
   if (event.data) {
     const data = event.data.json();
@@ -114,6 +179,22 @@ self.addEventListener('push', (event) => {
       self.registration.showNotification(data.title || 'Quản Lý Dạy Học', {
         body: data.body || '',
         icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-72x72.png',
+      })
+    );
+  }
+});
+
+// Handle messages from the main app
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+
+  if (event.data?.type === 'CACHE_URLS') {
+    event.waitUntil(
+      caches.open(DYNAMIC_CACHE).then((cache) => {
+        return cache.addAll(event.data.urls || []);
       })
     );
   }
