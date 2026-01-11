@@ -96,3 +96,68 @@ NODE_ENV=development
 # Client
 VITE_API_URL=http://localhost:3001/api
 ```
+
+## Offline Mode (PWA)
+
+The application supports offline functionality using IndexedDB for local data storage:
+
+### Offline Services (`client/src/services/`)
+- **offlineDb.ts**: IndexedDB wrapper for local storage (students, groups, sessions, payments, notes)
+- **offlineApi.ts**: Offline-aware API wrappers that fallback to local data when offline
+- **syncService.ts**: Handles data synchronization between local and server
+- **offlineDownload.ts**: Downloads all app data for offline use
+
+### Offline-Supported Pages
+- ✓ Dashboard (Tổng quan) - full offline support
+- ✓ Students (Học sinh) - full offline support
+- ✓ Groups (Lớp học) - full offline support
+- ✓ Attendance (Điểm danh) - full offline support
+- ✓ Payments (Học phí) - full offline support with local calculation
+- ✓ Notes (Ghi chú) - full offline support
+- ~ Settings (Cài đặt) - limited (backup/restore works, database management requires network)
+- ✗ Users (Người dùng) - requires network connection
+
+### Network Status Indicator
+Located in the header menu bar, shows:
+- Green WiFi icon: Online
+- Red crossed WiFi icon: Offline
+- Yellow sync icon with badge: Pending changes to sync
+- Blue spinning sync icon: Currently syncing
+
+## Docker Deployment
+
+### Production Deployment
+```bash
+# Build and run with Docker Compose
+docker-compose build
+docker-compose up -d
+
+# Services exposed:
+# - Client (nginx): Port 80
+# - Server (API): Port 3001
+# - MongoDB: Port 27017
+```
+
+### VPS Deployment
+The app is deployed on VPS (103.82.39.35):
+```bash
+ssh root@103.82.39.35
+cd /opt/quan-ly-day-hoc
+git pull
+docker-compose build && docker-compose up -d
+```
+
+## Recent Features
+
+### Student Portal
+- Students can view their own schedule and payment status
+- Access via `/student` route
+- Login using phone number
+
+### Online Class Links
+- Sessions can include online meeting links (Zoom, Google Meet, etc.)
+- Students see "Join Online Class" button for upcoming sessions
+
+### Multi-language Support
+- Vietnamese (primary)
+- English (Guide page has both versions)
