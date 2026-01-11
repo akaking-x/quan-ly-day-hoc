@@ -39,7 +39,7 @@ Hệ thống quản lý dạy học và học phí dành cho gia sư, giáo viê
 ### Bước 1: Clone repository
 
 ```bash
-git clone https://github.com/Akaking/tuition-management.git
+git clone https://github.com/akaking-x/quan-ly-day-hoc.git
 cd tuition-management
 ```
 
@@ -120,7 +120,7 @@ sudo apt install docker-compose-plugin
 ### Bước 2: Clone và cấu hình
 
 ```bash
-git clone https://github.com/Akaking/tuition-management.git
+git clone https://github.com/akaking-x/quan-ly-day-hoc.git
 cd tuition-management
 ```
 
@@ -403,7 +403,7 @@ sudo npm install -g pm2
 
 ```bash
 cd /var/www
-git clone https://github.com/Akaking/tuition-management.git
+git clone https://github.com/akaking-x/quan-ly-day-hoc.git
 cd tuition-management
 
 # Cài đặt và build server
@@ -588,7 +588,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tuition-m
 
 ## Hỗ trợ
 
-- Issues: https://github.com/Akaking/tuition-management/issues
+- Issues: https://github.com/akaking-x/quan-ly-day-hoc/issues
 - Hotline: 0977 040 868
 
 ---
