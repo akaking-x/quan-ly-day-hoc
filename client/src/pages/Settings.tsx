@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Button, Input, Card, CardBody, SettingsSkeleton, Modal, Select } from '../components/common';
+import { Button, Input, Card, CardBody, SettingsSkeleton, Modal } from '../components/common';
 import { settingsApi, databaseApi, DatabaseInfo, MigrateResult, authApi } from '../services/api';
 import { backupRestore, BackupData } from '../services/offlineDb';
 import { useAuthStore } from '../store/authStore';

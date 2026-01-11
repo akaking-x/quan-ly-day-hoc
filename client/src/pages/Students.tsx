@@ -60,11 +60,6 @@ export function Students() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  // Quick group assignment
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [isQuickGroupModalOpen, setIsQuickGroupModalOpen] = useState(false);
-  const [quickGroupId, setQuickGroupId] = useState('');
-  const [isAssigning, setIsAssigning] = useState(false);
   // Import feature
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importData, setImportData] = useState<ImportStudent[]>([]);

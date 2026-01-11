@@ -72,6 +72,7 @@ export interface Payment {
   method: 'cash' | 'transfer';
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Settings {

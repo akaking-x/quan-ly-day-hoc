@@ -1,6 +1,6 @@
 import { offlineStorage, syncQueue, metadata, ConflictItem } from './offlineDb';
 import { studentApi, groupApi, sessionApi, paymentApi, noteApi } from './api';
-import type { Student, Group, Session, Payment, Note } from '../types';
+import type { Student, Group, Session, Payment } from '../types';
 
 type SyncStatus = 'idle' | 'syncing' | 'error' | 'conflict';
 

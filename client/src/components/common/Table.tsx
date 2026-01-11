@@ -60,9 +60,10 @@ interface TableCellProps {
   children: ReactNode;
   header?: boolean;
   className?: string;
+  title?: string;
 }
 
-export function TableCell({ children, header = false, className = '' }: TableCellProps) {
+export function TableCell({ children, header = false, className = '', title }: TableCellProps) {
   if (header) {
     return (
       <th
@@ -71,6 +72,7 @@ export function TableCell({ children, header = false, className = '' }: TableCel
           text-gray-500 dark:text-gray-400 uppercase tracking-wider
           ${className}
         `}
+        title={title}
       >
         {children}
       </th>
@@ -78,7 +80,7 @@ export function TableCell({ children, header = false, className = '' }: TableCel
   }
 
   return (
-    <td className={`px-4 py-4 text-sm text-gray-900 dark:text-gray-100 ${className}`}>
+    <td className={`px-4 py-4 text-sm text-gray-900 dark:text-gray-100 ${className}`} title={title}>
       {children}
     </td>
   );

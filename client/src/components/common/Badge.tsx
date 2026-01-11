@@ -7,6 +7,7 @@ interface BadgeProps {
   className?: string;
   animate?: boolean;
   pulse?: boolean;
+  title?: string;
 }
 
 const variants = {
@@ -31,6 +32,7 @@ export function Badge({
   className = '',
   animate = false,
   pulse = false,
+  title,
 }: BadgeProps) {
   return (
     <span
@@ -42,6 +44,7 @@ export function Badge({
         ${pulse ? 'animate-pulse-soft' : ''}
         ${variants[variant]} ${sizes[size]} ${className}
       `}
+      title={title}
     >
       {children}
     </span>

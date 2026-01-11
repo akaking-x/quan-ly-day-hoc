@@ -723,7 +723,7 @@ export const offlineNoteApi = {
       _id: generateTempId(),
       title: data.title || '',
       content: data.content || '',
-      date: data.date,
+      date: data.date || new Date().toISOString().split('T')[0],
       type: data.type || 'general',
       pinned: data.pinned || false,
       createdAt: new Date().toISOString(),

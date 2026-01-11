@@ -17,46 +17,6 @@ export type DownloadProgress = {
 const OFFLINE_READY_KEY = 'offline-app-ready';
 const OFFLINE_DOWNLOAD_TIME_KEY = 'offline-download-time';
 
-// All pages that need to be pre-loaded for offline
-const PAGES_TO_CACHE = [
-  '/',
-  '/login',
-  '/students',
-  '/groups',
-  '/attendance',
-  '/payments',
-  '/notes',
-  '/guide',
-  '/settings',
-  '/users',
-  '/student',
-];
-
-// Pre-load a page by navigating to it in a hidden iframe
-async function preloadPage(url: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error(`Timeout loading ${url}`));
-    }, 30000);
-
-    // Use fetch to load the page and trigger JS chunk loading
-    fetch(url, { credentials: 'same-origin' })
-      .then(response => {
-        if (response.ok) {
-          clearTimeout(timeout);
-          resolve();
-        } else {
-          clearTimeout(timeout);
-          reject(new Error(`Failed to load ${url}`));
-        }
-      })
-      .catch(err => {
-        clearTimeout(timeout);
-        reject(err);
-      });
-  });
-}
-
 // Import all page modules to trigger chunk downloads
 async function preloadAllModules(): Promise<void> {
   const modules = [
