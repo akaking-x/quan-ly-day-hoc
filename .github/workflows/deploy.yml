@@ -1,0 +1,31 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd /opt/quan-ly-day-hoc
+            git fetch origin
+            git checkout production
+            git pull origin production
+            docker-compose build --no-cache
+            docker-compose up -d
+            docker system prune -f
+            echo "Deployment completed at $(date)"
