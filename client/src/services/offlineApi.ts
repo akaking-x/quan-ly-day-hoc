@@ -661,12 +661,20 @@ export const offlineReportApi = {
         })
         .reduce((sum, p) => sum + p.amount, 0);
 
+      const balance = totalFee - totalPaid;
+      const status: 'debt' | 'credit' | 'paid' = balance > 0 ? 'debt' : balance < 0 ? 'credit' : 'paid';
+
       return {
-        studentId: student._id,
-        studentName: student.name,
+        student: {
+          _id: student._id,
+          name: student.name,
+          phone: student.phone,
+          feePerSession: student.feePerSession,
+        },
         totalFee,
         totalPaid,
-        balance: totalFee - totalPaid,
+        balance,
+        status,
       };
     });
 
@@ -683,7 +691,6 @@ export const offlineReportApi = {
     }
 
     // Generate chart data from local sessions
-    const sessions = await offlineStorage.getAll<Session>('sessions');
     const payments = await offlineStorage.getAll<Payment>('payments');
 
     // Group by month for the last 6 months
@@ -695,19 +702,14 @@ export const offlineReportApi = {
       const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
       const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
 
-      const monthSessions = sessions.filter((s) => {
-        const sDate = new Date(s.date);
-        return sDate >= monthStart && sDate <= monthEnd;
-      });
-
       const monthPayments = payments.filter((p) => {
         const pDate = new Date(p.paymentDate);
         return pDate >= monthStart && pDate <= monthEnd;
       });
 
       chartData.push({
-        month: date.toLocaleDateString('vi-VN', { month: 'short' }),
-        sessions: monthSessions.length,
+        month: date.getMonth() + 1,
+        year: date.getFullYear(),
         revenue: monthPayments.reduce((sum, p) => sum + p.amount, 0),
       });
     }
