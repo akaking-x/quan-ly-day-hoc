@@ -2,24 +2,156 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#2563eb" />
     <meta name="description" content="Ứng dụng quản lý dạy học và điểm danh" />
+
+    <!-- PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="QLDH" />
+    <meta name="application-name" content="QLDH" />
+    <meta name="msapplication-TileColor" content="#2563eb" />
+    <meta name="format-detection" content="telephone=no" />
 
+    <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-152x152.png" />
 
     <title>Quản Lý Dạy Học</title>
+
+    <!-- Inline critical CSS for initial loading state -->
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      #app-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+        z-index: 9999;
+      }
+      #app-loader.hidden { display: none; }
+      .loader-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+      }
+      .loader-icon svg { width: 48px; height: 48px; color: white; }
+      .loader-text { color: white; font-size: 18px; font-weight: 500; }
+      .loader-spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        margin-top: 20px;
+        animation: spin 1s linear infinite;
+      }
+      .offline-message {
+        display: none;
+        color: white;
+        text-align: center;
+        padding: 20px;
+        max-width: 300px;
+      }
+      .offline-message h2 { font-size: 20px; margin-bottom: 10px; }
+      .offline-message p { opacity: 0.9; font-size: 14px; line-height: 1.5; }
+      .offline-message button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background: white;
+        color: #3B82F6;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    </style>
   </head>
   <body>
+    <!-- Initial loader shown before React loads -->
+    <div id="app-loader">
+      <div class="loader-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      </div>
+      <div class="loader-text">Quản Lý Dạy Học</div>
+      <div class="loader-spinner"></div>
+      <div class="offline-message" id="offline-msg">
+        <h2>Không có kết nối mạng</h2>
+        <p>Vui lòng kết nối internet và thử lại. Nếu đã tải dữ liệu offline, vui lòng đợi một chút.</p>
+        <button onclick="location.reload()">Thử lại</button>
+      </div>
+    </div>
+
     <div id="root"></div>
+
+    <script>
+      // Hide loader when app is ready
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var loader = document.getElementById('app-loader');
+          var root = document.getElementById('root');
+          if (root && root.children.length > 0) {
+            loader.classList.add('hidden');
+          }
+        }, 100);
+      });
+
+      // Show offline message after timeout if still loading
+      setTimeout(function() {
+        var loader = document.getElementById('app-loader');
+        var root = document.getElementById('root');
+        if (loader && !loader.classList.contains('hidden') && (!root || root.children.length === 0)) {
+          if (!navigator.onLine) {
+            document.querySelector('.loader-spinner').style.display = 'none';
+            document.getElementById('offline-msg').style.display = 'block';
+          }
+        }
+      }, 5000);
+
+      // Hide loader when React renders
+      var observer = new MutationObserver(function(mutations) {
+        var root = document.getElementById('root');
+        if (root && root.children.length > 0) {
+          document.getElementById('app-loader').classList.add('hidden');
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.getElementById('root'), { childList: true });
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
+
+    <noscript>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;background:#f3f4f6;">
+        <h1 style="color:#1f2937;margin-bottom:10px;">JavaScript Required</h1>
+        <p style="color:#6b7280;">Vui lòng bật JavaScript để sử dụng ứng dụng này.</p>
+      </div>
+    </noscript>
   </body>
 </html>

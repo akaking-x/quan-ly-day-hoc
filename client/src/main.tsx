@@ -24,18 +24,33 @@ if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.register('/sw.js');
       console.log('SW registered:', registration.scope);
 
-      // Cache all loaded scripts for offline use
+      // Cache all loaded scripts and pages for offline use
       if (navigator.serviceWorker.controller) {
         const scripts = Array.from(document.querySelectorAll('script[src]'))
           .map((script) => (script as HTMLScriptElement).src);
         const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
           .map((link) => (link as HTMLLinkElement).href);
 
+        // Cache current scripts and styles
         navigator.serviceWorker.controller.postMessage({
           type: 'CACHE_URLS',
           urls: [...scripts, ...styles],
         });
+
+        // Pre-cache all app pages for offline use
+        navigator.serviceWorker.controller.postMessage({
+          type: 'CACHE_ALL_PAGES',
+        });
       }
+
+      // When a new service worker is controlling, cache resources
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'CACHE_ALL_PAGES',
+          });
+        }
+      });
 
       // Listen for messages from service worker
       navigator.serviceWorker.addEventListener('message', async (event) => {
