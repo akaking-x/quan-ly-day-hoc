@@ -630,16 +630,89 @@ export const offlineReportApi = {
 
   async getBalance() {
     if (isOnline()) {
-      return reportApi.getBalance();
+      try {
+        return await reportApi.getBalance();
+      } catch {
+        // Fall through
+      }
     }
-    return { success: false, error: 'Balance report requires network connection' };
+
+    // Calculate balance from local data
+    const students = await offlineStorage.getAll<Student>('students');
+    const sessions = await offlineStorage.getAll<Session>('sessions');
+    const payments = await offlineStorage.getAll<Payment>('payments');
+
+    const activeStudents = students.filter((s) => s.active !== false);
+    const balanceList = activeStudents.map((student) => {
+      // Count attended sessions
+      const studentSessions = sessions.filter((s) => {
+        const attendance = s.attendance?.find((a) => {
+          const studentId = typeof a.studentId === 'string' ? a.studentId : a.studentId?._id;
+          return studentId === student._id && a.status === 'present';
+        });
+        return !!attendance;
+      });
+
+      const totalFee = studentSessions.length * student.feePerSession;
+      const totalPaid = payments
+        .filter((p) => {
+          const paymentStudentId = typeof p.studentId === 'string' ? p.studentId : (p.studentId as Student)?._id;
+          return paymentStudentId === student._id;
+        })
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      return {
+        studentId: student._id,
+        studentName: student.name,
+        totalFee,
+        totalPaid,
+        balance: totalFee - totalPaid,
+      };
+    });
+
+    return { success: true, data: balanceList };
   },
 
   async getChart() {
     if (isOnline()) {
-      return reportApi.getChart();
+      try {
+        return await reportApi.getChart();
+      } catch {
+        // Fall through
+      }
     }
-    return { success: false, error: 'Chart data requires network connection' };
+
+    // Generate chart data from local sessions
+    const sessions = await offlineStorage.getAll<Session>('sessions');
+    const payments = await offlineStorage.getAll<Payment>('payments');
+
+    // Group by month for the last 6 months
+    const now = new Date();
+    const chartData = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+      const monthSessions = sessions.filter((s) => {
+        const sDate = new Date(s.date);
+        return sDate >= monthStart && sDate <= monthEnd;
+      });
+
+      const monthPayments = payments.filter((p) => {
+        const pDate = new Date(p.paymentDate);
+        return pDate >= monthStart && pDate <= monthEnd;
+      });
+
+      chartData.push({
+        month: date.toLocaleDateString('vi-VN', { month: 'short' }),
+        sessions: monthSessions.length,
+        revenue: monthPayments.reduce((sum, p) => sum + p.amount, 0),
+      });
+    }
+
+    return { success: true, data: chartData };
   },
 };
 

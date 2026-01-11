@@ -4,8 +4,7 @@ import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, isToday, isTomorrow, 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Card, CardBody, DashboardSkeleton, Button, Badge } from '../components/common';
 import { useStore } from '../store/useStore';
-import { reportApi } from '../services/api';
-import { offlineSessionApi, offlineStudentApi } from '../services/offlineApi';
+import { offlineSessionApi, offlineStudentApi, offlineReportApi } from '../services/offlineApi';
 import type { ChartData, StudentBalance, Session, Student, StudentStatus } from '../types';
 
 const formatCurrency = (value: number) => {
@@ -57,12 +56,12 @@ export function Dashboard() {
       setLoading(true);
       await fetchSummary();
 
-      const chartRes = await reportApi.getChart();
+      const chartRes = await offlineReportApi.getChart();
       if (chartRes.success && chartRes.data) {
         setChartData(chartRes.data);
       }
 
-      const balanceRes = await reportApi.getBalance();
+      const balanceRes = await offlineReportApi.getBalance();
       if (balanceRes.success && balanceRes.data) {
         const debtList = balanceRes.data.filter(s => s.balance > 0);
         setAllDebtStudents(debtList);
