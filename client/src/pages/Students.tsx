@@ -137,6 +137,23 @@ export function Students() {
     setIsModalOpen(true);
   };
 
+  // Nhân bản học sinh - giữ thông tin nhóm, học phí, trường, khối - không giữ tên và trạng thái
+  const openDuplicateModal = (student: Student) => {
+    setEditingStudent(null); // Đây là thêm mới, không phải chỉnh sửa
+    setFormData({
+      name: '', // Không giữ tên
+      phone: '',
+      school: student.school || '',
+      grade: student.grade?.toString() || '',
+      feePerSession: student.feePerSession.toString(),
+      type: student.type,
+      groupId: typeof student.groupId === 'string' ? student.groupId : student.groupId?._id || '',
+      notes: '',
+      status: '', // Không giữ trạng thái
+    });
+    setIsModalOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -586,6 +603,18 @@ export function Students() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDuplicateModal(student);
+                            }}
+                            className="p-2 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 rounded-xl transition-colors"
+                            title="Nhân bản"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
